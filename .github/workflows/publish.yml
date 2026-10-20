@@ -1,0 +1,19 @@
+name: Publish
+# Manual only. Publishing to PyPI is not enabled yet: this builds and checks the package, without any registry credential.
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -e ".[test]" build twine
+      - run: pytest
+      - name: Build and check (no publication)
+        run: |
+          python -m build
+          twine check dist/*
