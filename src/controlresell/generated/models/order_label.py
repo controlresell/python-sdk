@@ -18,6 +18,7 @@ class OrderLabel:
     """
     Attributes:
         id (UUID):
+        order_id (UUID):
         carrier (None | str | Unset):
         url (None | str | Unset):
         original_url (None | str | Unset):
@@ -25,6 +26,7 @@ class OrderLabel:
     """
 
     id: UUID
+    order_id: UUID
     carrier: None | str | Unset = UNSET
     url: None | str | Unset = UNSET
     original_url: None | str | Unset = UNSET
@@ -33,6 +35,8 @@ class OrderLabel:
 
     def to_dict(self) -> dict[str, Any]:
         id = str(self.id)
+
+        order_id = str(self.order_id)
 
         carrier: None | str | Unset
         if isinstance(self.carrier, Unset):
@@ -65,6 +69,7 @@ class OrderLabel:
         field_dict.update(
             {
                 "id": id,
+                "orderId": order_id,
             }
         )
         if carrier is not UNSET:
@@ -82,6 +87,8 @@ class OrderLabel:
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
         d = dict(src_dict)
         id = UUID(d.pop("id"))
+
+        order_id = UUID(d.pop("orderId"))
 
         def _parse_carrier(data: object) -> None | str | Unset:
             if data is None:
@@ -129,6 +136,7 @@ class OrderLabel:
 
         order_label = cls(
             id=id,
+            order_id=order_id,
             carrier=carrier,
             url=url,
             original_url=original_url,

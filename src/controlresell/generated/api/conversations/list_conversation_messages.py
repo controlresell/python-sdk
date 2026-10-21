@@ -1,3 +1,4 @@
+import datetime
 from http import HTTPStatus
 from typing import Any
 from urllib.parse import quote
@@ -16,6 +17,8 @@ def _get_kwargs(
     *,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -23,6 +26,16 @@ def _get_kwargs(
     params["limit"] = limit
 
     params["cursor"] = cursor
+
+    json_from_: str | Unset = UNSET
+    if not isinstance(from_, Unset):
+        json_from_ = from_.isoformat()
+    params["from"] = json_from_
+
+    json_to: str | Unset = UNSET
+    if not isinstance(to, Unset):
+        json_to = to.isoformat()
+    params["to"] = json_to
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -102,16 +115,22 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> Response[ErrorResponse | MessagePage]:
     """List the messages of a conversation
 
      The messages of one conversation, oldest first, one page at a time: at most its 1 000 most recent
-    messages. Requires `conversations:read`.
+    messages (of the period, with `from` or `to`). Pass the `nextCursor` of a page as `cursor` with the
+    same `from` and `to` (a cursor reused with others is an `invalid_cursor`). `from` and `to` go
+    straight to a period: `from` is inclusive, `to` exclusive. Requires `conversations:read`.
 
     Args:
         id (UUID):
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
+        from_ (datetime.datetime | Unset):
+        to (datetime.datetime | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -125,6 +144,8 @@ def sync_detailed(
         id=id,
         limit=limit,
         cursor=cursor,
+        from_=from_,
+        to=to,
     )
 
     response = client.get_httpx_client().request(
@@ -140,16 +161,22 @@ def sync(
     client: AuthenticatedClient | Client,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> ErrorResponse | MessagePage | None:
     """List the messages of a conversation
 
      The messages of one conversation, oldest first, one page at a time: at most its 1 000 most recent
-    messages. Requires `conversations:read`.
+    messages (of the period, with `from` or `to`). Pass the `nextCursor` of a page as `cursor` with the
+    same `from` and `to` (a cursor reused with others is an `invalid_cursor`). `from` and `to` go
+    straight to a period: `from` is inclusive, `to` exclusive. Requires `conversations:read`.
 
     Args:
         id (UUID):
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
+        from_ (datetime.datetime | Unset):
+        to (datetime.datetime | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -164,6 +191,8 @@ def sync(
         client=client,
         limit=limit,
         cursor=cursor,
+        from_=from_,
+        to=to,
     ).parsed
 
 
@@ -173,16 +202,22 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> Response[ErrorResponse | MessagePage]:
     """List the messages of a conversation
 
      The messages of one conversation, oldest first, one page at a time: at most its 1 000 most recent
-    messages. Requires `conversations:read`.
+    messages (of the period, with `from` or `to`). Pass the `nextCursor` of a page as `cursor` with the
+    same `from` and `to` (a cursor reused with others is an `invalid_cursor`). `from` and `to` go
+    straight to a period: `from` is inclusive, `to` exclusive. Requires `conversations:read`.
 
     Args:
         id (UUID):
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
+        from_ (datetime.datetime | Unset):
+        to (datetime.datetime | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -196,6 +231,8 @@ async def asyncio_detailed(
         id=id,
         limit=limit,
         cursor=cursor,
+        from_=from_,
+        to=to,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -209,16 +246,22 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     limit: int | Unset = 50,
     cursor: str | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> ErrorResponse | MessagePage | None:
     """List the messages of a conversation
 
      The messages of one conversation, oldest first, one page at a time: at most its 1 000 most recent
-    messages. Requires `conversations:read`.
+    messages (of the period, with `from` or `to`). Pass the `nextCursor` of a page as `cursor` with the
+    same `from` and `to` (a cursor reused with others is an `invalid_cursor`). `from` and `to` go
+    straight to a period: `from` is inclusive, `to` exclusive. Requires `conversations:read`.
 
     Args:
         id (UUID):
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
+        from_ (datetime.datetime | Unset):
+        to (datetime.datetime | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -234,5 +277,7 @@ async def asyncio(
             client=client,
             limit=limit,
             cursor=cursor,
+            from_=from_,
+            to=to,
         )
     ).parsed

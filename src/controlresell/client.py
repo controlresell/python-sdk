@@ -34,7 +34,7 @@ from .generated.api.items import (
     update_item,
 )
 from .generated.api.me import get_me
-from .generated.api.orders import get_order, list_order_labels, list_orders
+from .generated.api.orders import get_order, list_labels_to_ship, list_order_labels, list_orders
 from .generated.client import AuthenticatedClient
 from .generated.models import (
     Account,
@@ -50,6 +50,7 @@ from .generated.models import (
     Message,
     MessagePage,
     Order,
+    OrderLabel,
     OrderLabelPage,
     OrderPage,
     PriceDropRequest,
@@ -250,20 +251,39 @@ class _Conversations:
         cursor: str | None = None,
         unread: bool | None = None,
         account_id: UUID | str | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
     ) -> ConversationPage:
-        """One page of the conversations with buyers."""
+        """One page of the conversations with buyers.
+
+        ``from_`` (inclusive) and ``to`` (exclusive) bound the last message (a naive datetime is read as UTC).
+        """
         account = UUID(str(account_id)) if account_id is not None else None
         return self._sdk._call(  # noqa: SLF001
-            list_conversations, **_query(limit=limit, cursor=cursor, unread=unread, account_id=account)
+            list_conversations,
+            **_query(limit=limit, cursor=cursor, unread=unread, account_id=account, from_=_utc(from_), to=_utc(to)),
         )
 
     def get(self, id: UUID | str) -> Conversation:
         return self._sdk._call(get_conversation, id=UUID(str(id)))  # noqa: SLF001
 
-    def messages(self, id: UUID | str, *, limit: int | None = None, cursor: str | None = None) -> MessagePage:
-        """One page of the messages of a conversation, oldest first."""
+    def messages(
+        self,
+        id: UUID | str,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> MessagePage:
+        """One page of the messages of a conversation, oldest first.
+
+        ``from_`` (inclusive) and ``to`` (exclusive) bound the period (a naive datetime is read as UTC).
+        """
         return self._sdk._call(  # noqa: SLF001
-            list_conversation_messages, id=UUID(str(id)), **_query(limit=limit, cursor=cursor)
+            list_conversation_messages,
+            id=UUID(str(id)),
+            **_query(limit=limit, cursor=cursor, from_=_utc(from_), to=_utc(to)),
         )
 
     def send_message(self, id: UUID | str, body: SendMessageRequest, *, idempotency_key: str | None = None) -> Message:
@@ -279,14 +299,31 @@ class _Conversations:
         )
 
     def iter(
-        self, *, limit: int | None = None, unread: bool | None = None, account_id: UUID | str | None = None
+        self,
+        *,
+        limit: int | None = None,
+        unread: bool | None = None,
+        account_id: UUID | str | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
     ) -> Iterator[Conversation]:
         """Every conversation, page after page, with the same filters."""
-        return paginate(lambda cursor: self.list(limit=limit, cursor=cursor, unread=unread, account_id=account_id))
+        return paginate(
+            lambda cursor: self.list(
+                limit=limit, cursor=cursor, unread=unread, account_id=account_id, from_=from_, to=to
+            )
+        )
 
-    def iter_messages(self, id: UUID | str, *, limit: int | None = None) -> Iterator[Any]:
-        """Every message of a conversation, page after page."""
-        return paginate(lambda cursor: self.messages(id, limit=limit, cursor=cursor))
+    def iter_messages(
+        self,
+        id: UUID | str,
+        *,
+        limit: int | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> Iterator[Any]:
+        """Every message of a conversation, page after page, with the same period."""
+        return paginate(lambda cursor: self.messages(id, limit=limit, cursor=cursor, from_=from_, to=to))
 
 
 class _Orders:
@@ -324,6 +361,14 @@ class _Orders:
     def labels(self, id: UUID | str) -> OrderLabelPage:
         """The shipping labels of an order."""
         return self._sdk._call(list_order_labels, id=UUID(str(id)))  # noqa: SLF001
+
+    def labels_to_ship(self, *, limit: int | None = None, cursor: str | None = None) -> OrderLabelPage:
+        """One page of the labels still to ship over all the orders, the oldest order first (each names its order)."""
+        return self._sdk._call(list_labels_to_ship, **_query(limit=limit, cursor=cursor))  # noqa: SLF001
+
+    def iter_labels_to_ship(self, *, limit: int | None = None) -> Iterator[OrderLabel]:
+        """Every label still to ship, page after page."""
+        return paginate(lambda cursor: self.labels_to_ship(limit=limit, cursor=cursor))
 
     def iter(
         self,

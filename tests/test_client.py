@@ -313,3 +313,31 @@ def test_orders_list_reads_a_naive_datetime_as_utc():
     sdk.orders.list(from_=datetime.datetime(2026, 10, 1), to=datetime.datetime(2026, 10, 2, tzinfo=datetime.timezone.utc))
     params = requests[0].url.params
     assert params["from"] == "2026-10-01T00:00:00+00:00" and params["to"] == "2026-10-02T00:00:00+00:00"
+
+
+def test_orders_iter_labels_to_ship_follows_the_cursor_on_orders_labels():
+    seen = []
+
+    def handler(request):
+        seen.append(request.url)
+        if request.url.params.get("cursor"):
+            return reply({"data": [{"id": ACCOUNT, "orderId": ACCOUNT}], "nextCursor": None})
+        return reply({"data": [{"id": ACCOUNT, "orderId": ACCOUNT}], "nextCursor": "c2"})
+
+    _, sdk = client(handler)
+    labels = list(sdk.orders.iter_labels_to_ship(limit=1))
+    assert len(labels) == 2 and str(labels[0].order_id) == ACCOUNT
+    assert [u.path for u in seen] == ["/api/public/v1/orders/labels"] * 2
+    assert seen[1].params["cursor"] == "c2"
+
+
+def test_conversations_messages_and_list_send_the_from_and_to_window():
+    import datetime
+
+    requests, sdk = client(lambda r: reply({"data": [], "nextCursor": None}))
+    start = datetime.datetime(2026, 10, 1, tzinfo=datetime.timezone.utc)
+    sdk.conversations.messages(ACCOUNT, from_=start, to=datetime.datetime(2026, 10, 2))
+    sdk.conversations.list(from_=start)
+    first, second = (r.url.params for r in requests)
+    assert first["from"] == "2026-10-01T00:00:00+00:00" and first["to"] == "2026-10-02T00:00:00+00:00"
+    assert second["from"] == "2026-10-01T00:00:00+00:00" and "to" not in second
