@@ -1,3 +1,4 @@
+import datetime
 from http import HTTPStatus
 from typing import Any
 from uuid import UUID
@@ -16,6 +17,8 @@ def _get_kwargs(
     cursor: str | Unset = UNSET,
     unread: bool | Unset = UNSET,
     account_id: UUID | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -30,6 +33,16 @@ def _get_kwargs(
     if not isinstance(account_id, Unset):
         json_account_id = str(account_id)
     params["accountId"] = json_account_id
+
+    json_from_: str | Unset = UNSET
+    if not isinstance(from_, Unset):
+        json_from_ = from_.isoformat()
+    params["from"] = json_from_
+
+    json_to: str | Unset = UNSET
+    if not isinstance(to, Unset):
+        json_to = to.isoformat()
+    params["to"] = json_to
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -103,18 +116,25 @@ def sync_detailed(
     cursor: str | Unset = UNSET,
     unread: bool | Unset = UNSET,
     account_id: UUID | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> Response[ConversationPage | ErrorResponse]:
     """List the seller's conversations
 
      The conversations with buyers on the seller's marketplace accounts, latest activity first, one page
     at a time. A conversation that receives a message while you read moves to the head: read again from
-    the first page to see it. Requires `conversations:read`.
+    the first page to see it. Pass the `nextCursor` of a page as `cursor` with the same filters (a
+    cursor reused with other filters is an `invalid_cursor`). `from` and `to` go straight to a period of
+    the last message: `from` is inclusive, `to` exclusive, and the period is read page by page like the
+    whole list. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
         unread (bool | Unset):
         account_id (UUID | Unset):
+        from_ (datetime.datetime | Unset):
+        to (datetime.datetime | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -129,6 +149,8 @@ def sync_detailed(
         cursor=cursor,
         unread=unread,
         account_id=account_id,
+        from_=from_,
+        to=to,
     )
 
     response = client.get_httpx_client().request(
@@ -145,18 +167,25 @@ def sync(
     cursor: str | Unset = UNSET,
     unread: bool | Unset = UNSET,
     account_id: UUID | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> ConversationPage | ErrorResponse | None:
     """List the seller's conversations
 
      The conversations with buyers on the seller's marketplace accounts, latest activity first, one page
     at a time. A conversation that receives a message while you read moves to the head: read again from
-    the first page to see it. Requires `conversations:read`.
+    the first page to see it. Pass the `nextCursor` of a page as `cursor` with the same filters (a
+    cursor reused with other filters is an `invalid_cursor`). `from` and `to` go straight to a period of
+    the last message: `from` is inclusive, `to` exclusive, and the period is read page by page like the
+    whole list. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
         unread (bool | Unset):
         account_id (UUID | Unset):
+        from_ (datetime.datetime | Unset):
+        to (datetime.datetime | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -172,6 +201,8 @@ def sync(
         cursor=cursor,
         unread=unread,
         account_id=account_id,
+        from_=from_,
+        to=to,
     ).parsed
 
 
@@ -182,18 +213,25 @@ async def asyncio_detailed(
     cursor: str | Unset = UNSET,
     unread: bool | Unset = UNSET,
     account_id: UUID | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> Response[ConversationPage | ErrorResponse]:
     """List the seller's conversations
 
      The conversations with buyers on the seller's marketplace accounts, latest activity first, one page
     at a time. A conversation that receives a message while you read moves to the head: read again from
-    the first page to see it. Requires `conversations:read`.
+    the first page to see it. Pass the `nextCursor` of a page as `cursor` with the same filters (a
+    cursor reused with other filters is an `invalid_cursor`). `from` and `to` go straight to a period of
+    the last message: `from` is inclusive, `to` exclusive, and the period is read page by page like the
+    whole list. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
         unread (bool | Unset):
         account_id (UUID | Unset):
+        from_ (datetime.datetime | Unset):
+        to (datetime.datetime | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -208,6 +246,8 @@ async def asyncio_detailed(
         cursor=cursor,
         unread=unread,
         account_id=account_id,
+        from_=from_,
+        to=to,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -222,18 +262,25 @@ async def asyncio(
     cursor: str | Unset = UNSET,
     unread: bool | Unset = UNSET,
     account_id: UUID | Unset = UNSET,
+    from_: datetime.datetime | Unset = UNSET,
+    to: datetime.datetime | Unset = UNSET,
 ) -> ConversationPage | ErrorResponse | None:
     """List the seller's conversations
 
      The conversations with buyers on the seller's marketplace accounts, latest activity first, one page
     at a time. A conversation that receives a message while you read moves to the head: read again from
-    the first page to see it. Requires `conversations:read`.
+    the first page to see it. Pass the `nextCursor` of a page as `cursor` with the same filters (a
+    cursor reused with other filters is an `invalid_cursor`). `from` and `to` go straight to a period of
+    the last message: `from` is inclusive, `to` exclusive, and the period is read page by page like the
+    whole list. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
         cursor (str | Unset):
         unread (bool | Unset):
         account_id (UUID | Unset):
+        from_ (datetime.datetime | Unset):
+        to (datetime.datetime | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -250,5 +297,7 @@ async def asyncio(
             cursor=cursor,
             unread=unread,
             account_id=account_id,
+            from_=from_,
+            to=to,
         )
     ).parsed
