@@ -9,11 +9,11 @@ client = ControlResell(api_key="cr_live_...")  # or set CONTROLRESELL_API_KEY
 me = client.me.get()
 for item in client.items.iter(sold=False):
     print(item.name)
-for order in client.orders.iter(bucket="to_send"):  # also orders.get(id), orders.labels(id)
+for order in client.orders.iter(bucket="to_send"):  # needs the orders:read scope; also orders.get(id), orders.labels(id)
     print(order.id)
 
 # Writes (API key with `items:write` / `conversations:write`); `idempotency_key=` chooses the key.
-from controlresell.generated.models import ItemCreateRequest, PublishRequest, SendMessageRequest
+from controlresell.generated.models import ItemCreateRequest, ItemUpdateRequest, PublishRequest, SendMessageRequest
 
 client.items.create(ItemCreateRequest(name="Jacket"))  # client.items.update(42, ItemUpdateRequest(...)) patches
 

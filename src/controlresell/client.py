@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import datetime
 import os
 import uuid
-import datetime
 from collections.abc import Iterator
 from types import ModuleType
 from typing import Any
@@ -141,6 +141,13 @@ class ControlResell:
 
 def _query(**values: Any) -> dict[str, Any]:
     return {key: UNSET if value is None else value for key, value in values.items()}
+
+
+def _utc(value: datetime.datetime | None) -> datetime.datetime | None:
+    """A naive datetime is read as UTC, so that it goes out with an offset."""
+    if value is not None and value.tzinfo is None:
+        return value.replace(tzinfo=datetime.timezone.utc)
+    return value
 
 
 def _key(idempotency_key: str | None) -> str:
@@ -299,17 +306,19 @@ class _Orders:
     ) -> OrderPage:
         """One page of the seller's orders, the most recent first.
 
-        ``bucket`` is ``to_send`` or ``to_pickup``; ``from_`` is inclusive and ``to`` exclusive.
+        ``bucket`` is ``to_send`` or ``to_pickup``; ``from_`` is inclusive and ``to`` exclusive (a naive datetime is read as
+        UTC).
         """
         account = UUID(str(account_id)) if account_id is not None else None
         return self._sdk._call(  # noqa: SLF001
             list_orders,
             **_query(
-                limit=limit, cursor=cursor, bucket=bucket, platform=platform, account_id=account, from_=from_, to=to
+                limit=limit, cursor=cursor, bucket=bucket, platform=platform, account_id=account, from_=_utc(from_), to=_utc(to)
             ),
         )
 
     def get(self, id: UUID | str) -> Order:
+        """One order by its identifier."""
         return self._sdk._call(get_order, id=UUID(str(id)))  # noqa: SLF001
 
     def labels(self, id: UUID | str) -> OrderLabelPage:

@@ -304,3 +304,12 @@ def test_orders_iter_follows_the_cursor_with_the_same_filters():
     assert ids == ["p1", "b"]
     assert [u.params["bucket"] for u in seen] == ["to_send", "to_send"]
     assert seen[0].params["from"] == start.isoformat() and seen[1].params["cursor"] == "c2"
+
+
+def test_orders_list_reads_a_naive_datetime_as_utc():
+    import datetime
+
+    requests, sdk = client(lambda r: reply({"data": [], "nextCursor": None}))
+    sdk.orders.list(from_=datetime.datetime(2026, 10, 1), to=datetime.datetime(2026, 10, 2, tzinfo=datetime.timezone.utc))
+    params = requests[0].url.params
+    assert params["from"] == "2026-10-01T00:00:00+00:00" and params["to"] == "2026-10-02T00:00:00+00:00"
