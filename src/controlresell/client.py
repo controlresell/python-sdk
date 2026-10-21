@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import uuid
 from collections.abc import Iterator
 from types import ModuleType
 from typing import Any
@@ -13,8 +14,22 @@ import httpx
 from . import __version__
 from .errors import ControlResellConnectionError, error_of
 from .generated.api.accounts import get_account, list_accounts
-from .generated.api.conversations import get_conversation, list_conversation_messages, list_conversations
-from .generated.api.items import get_item, list_item_listings, list_items
+from .generated.api.conversations import (
+    get_conversation,
+    list_conversation_messages,
+    list_conversations,
+    send_message,
+    send_offer,
+)
+from .generated.api.items import (
+    delete_item,
+    drop_item_price,
+    get_item,
+    list_item_listings,
+    list_items,
+    publish_item,
+    republish_item,
+)
 from .generated.api.me import get_me
 from .generated.client import AuthenticatedClient
 from .generated.models import (
@@ -26,7 +41,14 @@ from .generated.models import (
     ItemPage,
     ListingPage,
     Me,
+    Message,
     MessagePage,
+    PriceDropRequest,
+    PublishRequest,
+    RepublishRequest,
+    ScheduledAction,
+    SendMessageRequest,
+    SendOfferRequest,
 )
 from .generated.types import UNSET
 from .pagination import paginate
@@ -111,6 +133,10 @@ def _query(**values: Any) -> dict[str, Any]:
     return {key: UNSET if value is None else value for key, value in values.items()}
 
 
+def _key(idempotency_key: str | None) -> str:
+    return idempotency_key or str(uuid.uuid4())
+
+
 class _Me:
     def __init__(self, sdk: ControlResell) -> None:
         self._sdk = sdk
@@ -161,6 +187,26 @@ class _Items:
         """The item's listings on the seller's marketplace accounts."""
         return self._sdk._call(list_item_listings, id=id)  # noqa: SLF001
 
+    def delete(self, id: int) -> None:
+        """Deletes an item of the stock; an item still online is refused (409 ``item_still_listed``)."""
+        self._sdk._call(delete_item, id=id)  # noqa: SLF001
+
+    def publish(self, id: int, body: PublishRequest, *, idempotency_key: str | None = None) -> ScheduledAction:
+        """Schedules the publication of an item on the given accounts (needs ``items:write``)."""
+        return self._sdk._call(publish_item, id=id, body=body, idempotency_key=_key(idempotency_key))  # noqa: SLF001
+
+    def price_drop(self, id: int, body: PriceDropRequest, *, idempotency_key: str | None = None) -> ScheduledAction:
+        """Schedules a price drop of the item's listings."""
+        return self._sdk._call(drop_item_price, id=id, body=body, idempotency_key=_key(idempotency_key))  # noqa: SLF001
+
+    def republish(
+        self, id: int, body: RepublishRequest | None = None, *, idempotency_key: str | None = None
+    ) -> ScheduledAction:
+        """Schedules the republication of an item."""
+        return self._sdk._call(  # noqa: SLF001
+            republish_item, id=id, body=body or RepublishRequest(), idempotency_key=_key(idempotency_key)
+        )
+
     def iter(
         self, *, limit: int | None = None, sold: bool | None = None, account_id: UUID | str | None = None
     ) -> Iterator[Item]:
@@ -193,6 +239,18 @@ class _Conversations:
         """One page of the messages of a conversation, oldest first."""
         return self._sdk._call(  # noqa: SLF001
             list_conversation_messages, id=UUID(str(id)), **_query(limit=limit, cursor=cursor)
+        )
+
+    def send_message(self, id: UUID | str, body: SendMessageRequest, *, idempotency_key: str | None = None) -> Message:
+        """Sends a message to the buyer (needs ``conversations:write``)."""
+        return self._sdk._call(  # noqa: SLF001
+            send_message, id=UUID(str(id)), body=body, idempotency_key=_key(idempotency_key)
+        )
+
+    def send_offer(self, id: UUID | str, body: SendOfferRequest, *, idempotency_key: str | None = None) -> Message:
+        """Sends the buyer an offer."""
+        return self._sdk._call(  # noqa: SLF001
+            send_offer, id=UUID(str(id)), body=body, idempotency_key=_key(idempotency_key)
         )
 
     def iter(

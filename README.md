@@ -9,6 +9,12 @@ client = ControlResell(api_key="cr_live_...")  # or set CONTROLRESELL_API_KEY
 me = client.me.get()
 for item in client.items.iter(sold=False):
     print(item.name)
+
+# Writes (API key with `items:write` / `conversations:write`); `idempotency_key=` chooses the key.
+from controlresell.generated.models import PublishRequest, SendMessageRequest
+
+client.items.publish(42, PublishRequest(account_ids=["<account id>"]))
+client.conversations.send_message("<conversation id>", SendMessageRequest(text="Hello!"))
 ```
 
 Retries (rate limits, 502/503/504, network errors), `Idempotency-Key` on every `POST`, cursor pagination with plain iterators and typed errors (`NotFoundError`, `RateLimitError`...) are built in. The client is generated from the API's OpenAPI document (`scripts/generate.sh`, code in `src/controlresell/generated`).
