@@ -257,3 +257,59 @@ def test_a_write_keeps_the_same_idempotency_key_across_its_retries():
     _, sdk = client(handler)
     sdk.conversations.send_message(ACCOUNT, SendMessageRequest(text="hi"))
     assert len(calls) == 2 and calls[0] and calls[0] == calls[1]
+
+
+def test_create_posts_the_item_with_a_key_and_update_patches_it_without_one():
+    from controlresell.generated.models import ItemCreateRequest, ItemUpdateRequest
+
+    requests, sdk = client(lambda r: reply(item(7), 201 if r.method == "POST" else 200))
+    created = sdk.items.create(ItemCreateRequest(name="n"), idempotency_key="k1")
+    updated = sdk.items.update(7, ItemUpdateRequest(name="m"))
+    assert created.id == 7 and updated.id == 7
+    assert requests[0].method == "POST" and requests[0].url.path == "/api/public/v1/items"
+    assert requests[0].headers[IDEMPOTENCY_KEY_HEADER] == "k1"
+    assert json.loads(requests[0].content) == {"name": "n"}
+    assert requests[1].method == "PATCH" and requests[1].url.path == "/api/public/v1/items/7"
+    assert json.loads(requests[1].content) == {"name": "m"}
+    assert IDEMPOTENCY_KEY_HEADER not in requests[1].headers
+
+
+ORDER = {
+    "id": ACCOUNT, "accountId": ACCOUNT, "type": "SALE", "status": "PAID", "platformOrderId": "p1",
+    "price": {"amount": "12.50", "currency": "EUR"}, "prepared": False, "date": "2026-10-21T10:00:00Z", "items": [],
+}
+
+
+def test_orders_get_and_labels_read_the_order_and_its_labels():
+    requests, sdk = client(lambda r: reply({"data": [], "nextCursor": None}) if r.url.path.endswith("/labels") else reply(ORDER))
+    assert str(sdk.orders.get(ACCOUNT).id) == ACCOUNT
+    assert sdk.orders.labels(ACCOUNT).data == []
+    assert [r.url.path for r in requests] == [f"/api/public/v1/orders/{ACCOUNT}", f"/api/public/v1/orders/{ACCOUNT}/labels"]
+
+
+def test_orders_iter_follows_the_cursor_with_the_same_filters():
+    import datetime
+
+    seen = []
+
+    def handler(request):
+        seen.append(request.url)
+        if request.url.params.get("cursor"):
+            return reply({"data": [{**ORDER, "platformOrderId": "b"}], "nextCursor": None})
+        return reply({"data": [ORDER], "nextCursor": "c2"})
+
+    _, sdk = client(handler)
+    start = datetime.datetime(2026, 10, 1, tzinfo=datetime.timezone.utc)
+    ids = [o.platform_order_id for o in sdk.orders.iter(bucket="to_send", platform="VINTED", from_=start, limit=1)]
+    assert ids == ["p1", "b"]
+    assert [u.params["bucket"] for u in seen] == ["to_send", "to_send"]
+    assert seen[0].params["from"] == start.isoformat() and seen[1].params["cursor"] == "c2"
+
+
+def test_orders_list_reads_a_naive_datetime_as_utc():
+    import datetime
+
+    requests, sdk = client(lambda r: reply({"data": [], "nextCursor": None}))
+    sdk.orders.list(from_=datetime.datetime(2026, 10, 1), to=datetime.datetime(2026, 10, 2, tzinfo=datetime.timezone.utc))
+    params = requests[0].url.params
+    assert params["from"] == "2026-10-01T00:00:00+00:00" and params["to"] == "2026-10-02T00:00:00+00:00"
