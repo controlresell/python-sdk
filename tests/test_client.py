@@ -176,3 +176,62 @@ def test_the_key_is_read_from_the_environment(monkeypatch):
     monkeypatch.delenv("CONTROLRESELL_API_KEY")
     with pytest.raises(ValueError):
         ControlResell()
+
+
+ACTION = {"itemId": 7, "action": "PUBLISH", "accountIds": [], "scheduledAt": "2026-10-21T10:00:00Z"}
+ACCOUNT = "3f0c2a52-0b0c-4d65-9f40-2d2d3b1f4a10"
+
+
+def test_publish_posts_the_accounts_with_an_idempotency_key():
+    from controlresell.generated.models import PublishRequest
+
+    requests, sdk = client(lambda r: reply(ACTION, 202))
+    action = sdk.items.publish(7, PublishRequest(account_ids=[ACCOUNT]))
+    assert action.item_id == 7
+    assert requests[0].method == "POST"
+    assert requests[0].url.path == "/api/public/v1/items/7/publish"
+    assert json.loads(requests[0].content) == {"accountIds": [ACCOUNT]}
+    assert requests[0].headers[IDEMPOTENCY_KEY_HEADER]
+
+
+def test_a_write_uses_the_idempotency_key_it_is_given():
+    requests, sdk = client(lambda r: reply(ACTION, 202))
+    sdk.items.republish(7, idempotency_key="my-key")
+    assert requests[0].url.path == "/api/public/v1/items/7/republish"
+    assert requests[0].headers[IDEMPOTENCY_KEY_HEADER] == "my-key"
+
+
+def test_price_drop_posts_to_the_price_drop_route():
+    from controlresell.generated.models import PriceDropRequest
+
+    requests, sdk = client(lambda r: reply(ACTION, 202))
+    sdk.items.price_drop(7, PriceDropRequest(type_="PERCENT", value="10"))
+    assert requests[0].url.path == "/api/public/v1/items/7/price-drop"
+    assert json.loads(requests[0].content) == {"type": "PERCENT", "value": "10"}
+
+
+def test_delete_resolves_on_204_and_raises_a_typed_error_on_409():
+    requests, sdk = client(lambda r: httpx.Response(204))
+    assert sdk.items.delete(7) is None
+    assert requests[0].method == "DELETE"
+    _, refused = client(lambda r: reply(envelope("item_still_listed"), 409))
+    with pytest.raises(ConflictError) as caught:
+        refused.items.delete(7)
+    assert caught.value.code == "item_still_listed"
+
+
+def test_send_message_and_send_offer_post_to_the_conversation():
+    from controlresell.generated.models import Money, SendMessageRequest, SendOfferRequest
+
+    message = {
+        "id": ACCOUNT, "conversationId": ACCOUNT, "author": "SELLER", "type": "TEXT", "status": "SENT",
+        "body": "hi", "createdAt": "2026-10-21T10:00:00Z",
+    }
+    requests, sdk = client(lambda r: reply(message, 201))
+    sdk.conversations.send_message(ACCOUNT, SendMessageRequest(text="hi"))
+    sdk.conversations.send_offer(ACCOUNT, SendOfferRequest(price=Money(amount="12.50", currency="EUR")))
+    assert [r.url.path for r in requests] == [
+        f"/api/public/v1/conversations/{ACCOUNT}/messages",
+        f"/api/public/v1/conversations/{ACCOUNT}/offers",
+    ]
+    assert json.loads(requests[1].content) == {"price": {"amount": "12.50", "currency": "EUR"}}
