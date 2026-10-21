@@ -6,6 +6,9 @@ from .api_error import ApiError
 from .api_error_params import ApiErrorParams
 from .conversation import Conversation
 from .conversation_page import ConversationPage
+from .customer import Customer
+from .customer_address import CustomerAddress
+from .customer_page import CustomerPage
 from .error_response import ErrorResponse
 from .item import Item
 from .item_create_request import ItemCreateRequest
@@ -38,6 +41,9 @@ __all__ = (
     "ApiErrorParams",
     "Conversation",
     "ConversationPage",
+    "Customer",
+    "CustomerAddress",
+    "CustomerPage",
     "ErrorResponse",
     "Item",
     "ItemCreateRequest",
