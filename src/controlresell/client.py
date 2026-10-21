@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import uuid
+import datetime
 from collections.abc import Iterator
 from types import ModuleType
 from typing import Any
@@ -22,6 +23,7 @@ from .generated.api.conversations import (
     send_offer,
 )
 from .generated.api.items import (
+    create_item,
     delete_item,
     drop_item_price,
     get_item,
@@ -29,8 +31,10 @@ from .generated.api.items import (
     list_items,
     publish_item,
     republish_item,
+    update_item,
 )
 from .generated.api.me import get_me
+from .generated.api.orders import get_order, list_order_labels, list_orders
 from .generated.client import AuthenticatedClient
 from .generated.models import (
     Account,
@@ -38,11 +42,16 @@ from .generated.models import (
     Conversation,
     ConversationPage,
     Item,
+    ItemCreateRequest,
     ItemPage,
+    ItemUpdateRequest,
     ListingPage,
     Me,
     Message,
     MessagePage,
+    Order,
+    OrderLabelPage,
+    OrderPage,
     PriceDropRequest,
     PublishRequest,
     RepublishRequest,
@@ -98,6 +107,7 @@ class ControlResell:
         self.accounts = _Accounts(self)
         self.items = _Items(self)
         self.conversations = _Conversations(self)
+        self.orders = _Orders(self)
 
     @property
     def http(self) -> httpx.Client:
@@ -187,6 +197,14 @@ class _Items:
         """The item's listings on the seller's marketplace accounts."""
         return self._sdk._call(list_item_listings, id=id)  # noqa: SLF001
 
+    def create(self, body: ItemCreateRequest, *, idempotency_key: str | None = None) -> Item:
+        """Creates an item in the stock, without publishing it (needs ``items:write``)."""
+        return self._sdk._call(create_item, body=body, idempotency_key=_key(idempotency_key))  # noqa: SLF001
+
+    def update(self, id: int, body: ItemUpdateRequest) -> Item:
+        """Updates the given fields of an item (a ``PATCH``: the fields left out are kept)."""
+        return self._sdk._call(update_item, id=id, body=body)  # noqa: SLF001
+
     def delete(self, id: int) -> None:
         """Deletes an item of the stock; an item still online is refused (409 ``item_still_listed``)."""
         self._sdk._call(delete_item, id=id)  # noqa: SLF001
@@ -262,3 +280,55 @@ class _Conversations:
     def iter_messages(self, id: UUID | str, *, limit: int | None = None) -> Iterator[Any]:
         """Every message of a conversation, page after page."""
         return paginate(lambda cursor: self.messages(id, limit=limit, cursor=cursor))
+
+
+class _Orders:
+    def __init__(self, sdk: ControlResell) -> None:
+        self._sdk = sdk
+
+    def list(
+        self,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        bucket: str | None = None,
+        platform: str | None = None,
+        account_id: UUID | str | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> OrderPage:
+        """One page of the seller's orders, the most recent first.
+
+        ``bucket`` is ``to_send`` or ``to_pickup``; ``from_`` is inclusive and ``to`` exclusive.
+        """
+        account = UUID(str(account_id)) if account_id is not None else None
+        return self._sdk._call(  # noqa: SLF001
+            list_orders,
+            **_query(
+                limit=limit, cursor=cursor, bucket=bucket, platform=platform, account_id=account, from_=from_, to=to
+            ),
+        )
+
+    def get(self, id: UUID | str) -> Order:
+        return self._sdk._call(get_order, id=UUID(str(id)))  # noqa: SLF001
+
+    def labels(self, id: UUID | str) -> OrderLabelPage:
+        """The shipping labels of an order."""
+        return self._sdk._call(list_order_labels, id=UUID(str(id)))  # noqa: SLF001
+
+    def iter(
+        self,
+        *,
+        limit: int | None = None,
+        bucket: str | None = None,
+        platform: str | None = None,
+        account_id: UUID | str | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> Iterator[Order]:
+        """Every order, page after page, with the same filters."""
+        return paginate(
+            lambda cursor: self.list(
+                limit=limit, cursor=cursor, bucket=bucket, platform=platform, account_id=account_id, from_=from_, to=to
+            )
+        )
