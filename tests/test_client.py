@@ -235,3 +235,25 @@ def test_send_message_and_send_offer_post_to_the_conversation():
         f"/api/public/v1/conversations/{ACCOUNT}/offers",
     ]
     assert json.loads(requests[1].content) == {"price": {"amount": "12.50", "currency": "EUR"}}
+
+
+def test_a_write_keeps_the_same_idempotency_key_across_its_retries():
+    from controlresell.generated.models import SendMessageRequest
+
+    calls = []
+
+    def handler(request):
+        calls.append(request.headers[IDEMPOTENCY_KEY_HEADER])
+        if len(calls) < 2:
+            return reply(envelope("idempotency_unavailable"), 503)
+        return reply(
+            {
+                "id": ACCOUNT, "conversationId": ACCOUNT, "author": "SELLER", "type": "TEXT", "status": "SENT",
+                "createdAt": "2026-10-21T10:00:00Z",
+            },
+            201,
+        )
+
+    _, sdk = client(handler)
+    sdk.conversations.send_message(ACCOUNT, SendMessageRequest(text="hi"))
+    assert len(calls) == 2 and calls[0] and calls[0] == calls[1]
