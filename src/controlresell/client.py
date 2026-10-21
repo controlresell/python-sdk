@@ -33,6 +33,7 @@ from .generated.api.items import (
     republish_item,
     update_item,
 )
+from .generated.api.customers import get_customer, list_customers
 from .generated.api.me import get_me
 from .generated.api.orders import get_order, list_labels_to_ship, list_order_labels, list_orders
 from .generated.client import AuthenticatedClient
@@ -41,6 +42,8 @@ from .generated.models import (
     AccountPage,
     Conversation,
     ConversationPage,
+    Customer,
+    CustomerPage,
     Item,
     ItemCreateRequest,
     ItemPage,
@@ -109,6 +112,7 @@ class ControlResell:
         self.items = _Items(self)
         self.conversations = _Conversations(self)
         self.orders = _Orders(self)
+        self.customers = _Customers(self)
 
     @property
     def http(self) -> httpx.Client:
@@ -386,3 +390,43 @@ class _Orders:
                 limit=limit, cursor=cursor, bucket=bucket, platform=platform, account_id=account_id, from_=from_, to=to
             )
         )
+
+
+class _Customers:
+    """The other parties of the seller's sales and purchases (needs the ``customers:read`` scope)."""
+
+    def __init__(self, sdk: ControlResell) -> None:
+        self._sdk = sdk
+
+    def list(
+        self,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        account_id: UUID | str | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> CustomerPage:
+        """One page of customers, the most recently created first.
+
+        ``from_`` is inclusive and ``to`` exclusive, on the creation date (a naive datetime is read as UTC).
+        """
+        account = UUID(str(account_id)) if account_id is not None else None
+        return self._sdk._call(  # noqa: SLF001
+            list_customers, **_query(limit=limit, cursor=cursor, account_id=account, from_=_utc(from_), to=_utc(to))
+        )
+
+    def get(self, id: UUID | str) -> Customer:
+        """One customer by its identifier."""
+        return self._sdk._call(get_customer, id=UUID(str(id)))  # noqa: SLF001
+
+    def iter(
+        self,
+        *,
+        limit: int | None = None,
+        account_id: UUID | str | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> Iterator[Customer]:
+        """Every customer, page after page, with the same filters."""
+        return paginate(lambda cursor: self.list(limit=limit, cursor=cursor, account_id=account_id, from_=from_, to=to))

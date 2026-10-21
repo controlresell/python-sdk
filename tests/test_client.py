@@ -18,6 +18,16 @@ KEY = "cr_test_secret"
 FAST = RetryPolicy(base_delay=0.001, max_delay=0.005)
 
 
+CUSTOMER = {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "firstName": "Ann",
+    "lastName": "Doe",
+    "email": None,
+    "address": {"country": "FR"},
+    "createdAt": "2026-10-21T10:00:00Z",
+}
+
+
 def reply(body, status=200, headers=None):
     return httpx.Response(status, json=body, headers=headers or {})
 
@@ -329,6 +339,32 @@ def test_orders_iter_labels_to_ship_follows_the_cursor_on_orders_labels():
     assert len(labels) == 2 and str(labels[0].order_id) == ACCOUNT
     assert [u.path for u in seen] == ["/api/public/v1/orders/labels"] * 2
     assert seen[1].params["cursor"] == "c2"
+
+
+def test_customers_iter_follows_the_cursor_with_the_same_filters():
+    import datetime
+
+    seen = []
+
+    def handler(request):
+        seen.append(request.url)
+        if request.url.params.get("cursor"):
+            return reply({"data": [{**CUSTOMER, "firstName": "Bob"}], "nextCursor": None})
+        return reply({"data": [CUSTOMER], "nextCursor": "c2"})
+
+    _, sdk = client(handler)
+    start = datetime.datetime(2026, 10, 1, tzinfo=datetime.timezone.utc)
+    names = [c.first_name for c in sdk.customers.iter(account_id=ACCOUNT, from_=start, limit=1)]
+    assert names == ["Ann", "Bob"]
+    assert [u.path for u in seen] == ["/api/public/v1/customers"] * 2
+    assert [u.params["accountId"] for u in seen] == [ACCOUNT, ACCOUNT]
+    assert seen[0].params["from"] == start.isoformat() and seen[1].params["cursor"] == "c2"
+
+
+def test_customers_get_reads_one_customer():
+    requests, sdk = client(lambda r: reply(CUSTOMER))
+    assert sdk.customers.get(ACCOUNT).first_name == "Ann"
+    assert requests[0].url.path == f"/api/public/v1/customers/{ACCOUNT}"
 
 
 def test_conversations_messages_and_list_send_the_from_and_to_window():
