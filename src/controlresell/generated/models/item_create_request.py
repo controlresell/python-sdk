@@ -11,6 +11,9 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.item_attribute import ItemAttribute
+    from ..models.item_custom_field import ItemCustomField
+    from ..models.item_enum_value import ItemEnumValue
     from ..models.money import Money
 
 
@@ -33,11 +36,20 @@ class ItemCreateRequest:
         sex (None | str | Unset):
         labels (list[str] | Unset):
         sold (bool | Unset):
+        package_size_id (int | None | Unset):
+        material_ids (list[int] | Unset):
+        measurement_length (float | None | Unset):
+        measurement_width (float | None | Unset):
+        enum_values (list[ItemEnumValue] | Unset):
+        attributes (list[ItemAttribute] | Unset):
+        custom_fields (list[ItemCustomField] | Unset):
         estimated_price (Money | None | Unset):
         purchase_price (Money | None | Unset):
         purchase_date (datetime.datetime | None | Unset):
+        purchase_place_id (int | None | Unset):
         selling_price (Money | None | Unset):
         selling_date (datetime.datetime | None | Unset):
+        selling_place_id (int | None | Unset):
     """
 
     name: str
@@ -52,11 +64,20 @@ class ItemCreateRequest:
     sex: None | str | Unset = UNSET
     labels: list[str] | Unset = UNSET
     sold: bool | Unset = UNSET
+    package_size_id: int | None | Unset = UNSET
+    material_ids: list[int] | Unset = UNSET
+    measurement_length: float | None | Unset = UNSET
+    measurement_width: float | None | Unset = UNSET
+    enum_values: list[ItemEnumValue] | Unset = UNSET
+    attributes: list[ItemAttribute] | Unset = UNSET
+    custom_fields: list[ItemCustomField] | Unset = UNSET
     estimated_price: Money | None | Unset = UNSET
     purchase_price: Money | None | Unset = UNSET
     purchase_date: datetime.datetime | None | Unset = UNSET
+    purchase_place_id: int | None | Unset = UNSET
     selling_price: Money | None | Unset = UNSET
     selling_date: datetime.datetime | None | Unset = UNSET
+    selling_place_id: int | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -123,6 +144,49 @@ class ItemCreateRequest:
 
         sold = self.sold
 
+        package_size_id: int | None | Unset
+        if isinstance(self.package_size_id, Unset):
+            package_size_id = UNSET
+        else:
+            package_size_id = self.package_size_id
+
+        material_ids: list[int] | Unset = UNSET
+        if not isinstance(self.material_ids, Unset):
+            material_ids = self.material_ids
+
+        measurement_length: float | None | Unset
+        if isinstance(self.measurement_length, Unset):
+            measurement_length = UNSET
+        else:
+            measurement_length = self.measurement_length
+
+        measurement_width: float | None | Unset
+        if isinstance(self.measurement_width, Unset):
+            measurement_width = UNSET
+        else:
+            measurement_width = self.measurement_width
+
+        enum_values: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.enum_values, Unset):
+            enum_values = []
+            for enum_values_item_data in self.enum_values:
+                enum_values_item = enum_values_item_data.to_dict()
+                enum_values.append(enum_values_item)
+
+        attributes: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.attributes, Unset):
+            attributes = []
+            for attributes_item_data in self.attributes:
+                attributes_item = attributes_item_data.to_dict()
+                attributes.append(attributes_item)
+
+        custom_fields: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.custom_fields, Unset):
+            custom_fields = []
+            for custom_fields_item_data in self.custom_fields:
+                custom_fields_item = custom_fields_item_data.to_dict()
+                custom_fields.append(custom_fields_item)
+
         estimated_price: dict[str, Any] | None | Unset
         if isinstance(self.estimated_price, Unset):
             estimated_price = UNSET
@@ -147,6 +211,12 @@ class ItemCreateRequest:
         else:
             purchase_date = self.purchase_date
 
+        purchase_place_id: int | None | Unset
+        if isinstance(self.purchase_place_id, Unset):
+            purchase_place_id = UNSET
+        else:
+            purchase_place_id = self.purchase_place_id
+
         selling_price: dict[str, Any] | None | Unset
         if isinstance(self.selling_price, Unset):
             selling_price = UNSET
@@ -162,6 +232,12 @@ class ItemCreateRequest:
             selling_date = self.selling_date.isoformat()
         else:
             selling_date = self.selling_date
+
+        selling_place_id: int | None | Unset
+        if isinstance(self.selling_place_id, Unset):
+            selling_place_id = UNSET
+        else:
+            selling_place_id = self.selling_place_id
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -192,21 +268,42 @@ class ItemCreateRequest:
             field_dict["labels"] = labels
         if sold is not UNSET:
             field_dict["sold"] = sold
+        if package_size_id is not UNSET:
+            field_dict["packageSizeId"] = package_size_id
+        if material_ids is not UNSET:
+            field_dict["materialIds"] = material_ids
+        if measurement_length is not UNSET:
+            field_dict["measurementLength"] = measurement_length
+        if measurement_width is not UNSET:
+            field_dict["measurementWidth"] = measurement_width
+        if enum_values is not UNSET:
+            field_dict["enumValues"] = enum_values
+        if attributes is not UNSET:
+            field_dict["attributes"] = attributes
+        if custom_fields is not UNSET:
+            field_dict["customFields"] = custom_fields
         if estimated_price is not UNSET:
             field_dict["estimatedPrice"] = estimated_price
         if purchase_price is not UNSET:
             field_dict["purchasePrice"] = purchase_price
         if purchase_date is not UNSET:
             field_dict["purchaseDate"] = purchase_date
+        if purchase_place_id is not UNSET:
+            field_dict["purchasePlaceId"] = purchase_place_id
         if selling_price is not UNSET:
             field_dict["sellingPrice"] = selling_price
         if selling_date is not UNSET:
             field_dict["sellingDate"] = selling_date
+        if selling_place_id is not UNSET:
+            field_dict["sellingPlaceId"] = selling_place_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
+        from ..models.item_attribute import ItemAttribute
+        from ..models.item_custom_field import ItemCustomField
+        from ..models.item_enum_value import ItemEnumValue
         from ..models.money import Money
 
         d = dict(src_dict)
@@ -290,6 +387,64 @@ class ItemCreateRequest:
 
         sold = d.pop("sold", UNSET)
 
+        def _parse_package_size_id(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        package_size_id = _parse_package_size_id(d.pop("packageSizeId", UNSET))
+
+        material_ids = cast(list[int], d.pop("materialIds", UNSET))
+
+        def _parse_measurement_length(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        measurement_length = _parse_measurement_length(
+            d.pop("measurementLength", UNSET)
+        )
+
+        def _parse_measurement_width(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        measurement_width = _parse_measurement_width(d.pop("measurementWidth", UNSET))
+
+        _enum_values = d.pop("enumValues", UNSET)
+        enum_values: list[ItemEnumValue] | Unset = UNSET
+        if _enum_values is not UNSET:
+            enum_values = []
+            for enum_values_item_data in _enum_values:
+                enum_values_item = ItemEnumValue.from_dict(enum_values_item_data)
+
+                enum_values.append(enum_values_item)
+
+        _attributes = d.pop("attributes", UNSET)
+        attributes: list[ItemAttribute] | Unset = UNSET
+        if _attributes is not UNSET:
+            attributes = []
+            for attributes_item_data in _attributes:
+                attributes_item = ItemAttribute.from_dict(attributes_item_data)
+
+                attributes.append(attributes_item)
+
+        _custom_fields = d.pop("customFields", UNSET)
+        custom_fields: list[ItemCustomField] | Unset = UNSET
+        if _custom_fields is not UNSET:
+            custom_fields = []
+            for custom_fields_item_data in _custom_fields:
+                custom_fields_item = ItemCustomField.from_dict(custom_fields_item_data)
+
+                custom_fields.append(custom_fields_item)
+
         def _parse_estimated_price(data: object) -> Money | None | Unset:
             if data is None:
                 return data
@@ -341,6 +496,15 @@ class ItemCreateRequest:
 
         purchase_date = _parse_purchase_date(d.pop("purchaseDate", UNSET))
 
+        def _parse_purchase_place_id(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        purchase_place_id = _parse_purchase_place_id(d.pop("purchasePlaceId", UNSET))
+
         def _parse_selling_price(data: object) -> Money | None | Unset:
             if data is None:
                 return data
@@ -375,6 +539,15 @@ class ItemCreateRequest:
 
         selling_date = _parse_selling_date(d.pop("sellingDate", UNSET))
 
+        def _parse_selling_place_id(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        selling_place_id = _parse_selling_place_id(d.pop("sellingPlaceId", UNSET))
+
         item_create_request = cls(
             name=name,
             sku=sku,
@@ -388,11 +561,20 @@ class ItemCreateRequest:
             sex=sex,
             labels=labels,
             sold=sold,
+            package_size_id=package_size_id,
+            material_ids=material_ids,
+            measurement_length=measurement_length,
+            measurement_width=measurement_width,
+            enum_values=enum_values,
+            attributes=attributes,
+            custom_fields=custom_fields,
             estimated_price=estimated_price,
             purchase_price=purchase_price,
             purchase_date=purchase_date,
+            purchase_place_id=purchase_place_id,
             selling_price=selling_price,
             selling_date=selling_date,
+            selling_place_id=selling_place_id,
         )
 
         item_create_request.additional_properties = d

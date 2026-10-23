@@ -11,7 +11,10 @@ from .customer_address import CustomerAddress
 from .customer_page import CustomerPage
 from .error_response import ErrorResponse
 from .item import Item
+from .item_attribute import ItemAttribute
 from .item_create_request import ItemCreateRequest
+from .item_custom_field import ItemCustomField
+from .item_enum_value import ItemEnumValue
 from .item_page import ItemPage
 from .item_photo import ItemPhoto
 from .item_update_request import ItemUpdateRequest
@@ -46,7 +49,10 @@ __all__ = (
     "CustomerPage",
     "ErrorResponse",
     "Item",
+    "ItemAttribute",
     "ItemCreateRequest",
+    "ItemCustomField",
+    "ItemEnumValue",
     "ItemPage",
     "ItemPhoto",
     "ItemUpdateRequest",
