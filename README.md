@@ -11,6 +11,8 @@ for item in client.items.iter(sold=False):
     print(item.name)
 for order in client.orders.iter(bucket="to_send"):  # needs the orders:read scope; also orders.get(id), orders.labels(id)
     print(order.id)
+for brand in client.catalogs.iter_brands(q="nik"):  # the identifiers an item is written with (items:read): categories, category, category_fields, brands, sizes, colors, conditions, package_sizes, materials
+    print(brand.id, brand.name)
 
 # Writes (API key with `items:write` / `conversations:write`); `idempotency_key=` chooses the key.
 from controlresell.generated.models import ItemCreateRequest, ItemUpdateRequest, PublishRequest, SendMessageRequest

@@ -368,6 +368,34 @@ def test_customers_get_reads_one_customer():
     assert requests[0].url.path == f"/api/public/v1/customers/{ACCOUNT}"
 
 
+def test_catalogs_iter_brands_follows_the_cursor_with_the_same_query():
+    seen = []
+
+    def handler(request):
+        seen.append(request.url)
+        if request.url.params.get("cursor"):
+            return reply({"data": [{"id": 2, "name": "Nikon", "custom": True}], "nextCursor": None})
+        return reply({"data": [{"id": 1, "name": "Nike", "custom": False}], "nextCursor": "c2"})
+
+    _, sdk = client(handler)
+    assert [b.name for b in sdk.catalogs.iter_brands(q="nik")] == ["Nike", "Nikon"]
+    assert [u.path for u in seen] == ["/api/public/v1/catalogs/brands"] * 2
+    assert [u.params["q"] for u in seen] == ["nik", "nik"] and seen[1].params["cursor"] == "c2"
+
+
+def test_catalogs_colors_send_the_category_and_read_the_values():
+    requests, sdk = client(lambda r: reply({"data": [{"id": 3, "key": "red", "title": "Red"}], "nextCursor": None}))
+    assert sdk.catalogs.colors(category_id=12).data[0].title == "Red"
+    assert requests[0].url.path == "/api/public/v1/catalogs/colors" and requests[0].url.params["categoryId"] == "12"
+
+
+def test_catalogs_category_fields_reads_the_fields_of_one_category():
+    body = {"categoryId": 12, "sizeGroupIds": [1], "enumFields": [], "textFields": [], "measurements": []}
+    requests, sdk = client(lambda r: reply(body))
+    assert sdk.catalogs.category_fields(12).category_id == 12
+    assert requests[0].url.path == "/api/public/v1/catalogs/categories/12/fields"
+
+
 def test_conversations_messages_and_list_send_the_from_and_to_window():
     import datetime
 

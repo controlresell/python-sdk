@@ -4,6 +4,18 @@ from .account import Account
 from .account_page import AccountPage
 from .api_error import ApiError
 from .api_error_params import ApiErrorParams
+from .catalog_brand import CatalogBrand
+from .catalog_brand_page import CatalogBrandPage
+from .catalog_category import CatalogCategory
+from .catalog_category_fields import CatalogCategoryFields
+from .catalog_category_page import CatalogCategoryPage
+from .catalog_enum_field import CatalogEnumField
+from .catalog_measurement import CatalogMeasurement
+from .catalog_size import CatalogSize
+from .catalog_size_page import CatalogSizePage
+from .catalog_text_field import CatalogTextField
+from .catalog_value import CatalogValue
+from .catalog_value_page import CatalogValuePage
 from .conversation import Conversation
 from .conversation_page import ConversationPage
 from .customer import Customer
@@ -42,6 +54,18 @@ __all__ = (
     "AccountPage",
     "ApiError",
     "ApiErrorParams",
+    "CatalogBrand",
+    "CatalogBrandPage",
+    "CatalogCategory",
+    "CatalogCategoryFields",
+    "CatalogCategoryPage",
+    "CatalogEnumField",
+    "CatalogMeasurement",
+    "CatalogSize",
+    "CatalogSizePage",
+    "CatalogTextField",
+    "CatalogValue",
+    "CatalogValuePage",
     "Conversation",
     "ConversationPage",
     "Customer",
