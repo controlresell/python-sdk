@@ -10,6 +10,9 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.item_attribute import ItemAttribute
+    from ..models.item_custom_field import ItemCustomField
+    from ..models.item_enum_value import ItemEnumValue
     from ..models.item_photo import ItemPhoto
     from ..models.money import Money
 
@@ -27,6 +30,10 @@ class Item:
         color_ids (list[int]):
         labels (list[str]):
         sold (bool):
+        material_ids (list[int]):
+        enum_values (list[ItemEnumValue]):
+        attributes (list[ItemAttribute]):
+        custom_fields (list[ItemCustomField]):
         created_at (datetime.datetime):
         updated_at (datetime.datetime):
         sku (None | str | Unset):
@@ -36,11 +43,16 @@ class Item:
         size_id (int | None | Unset):
         state (int | None | Unset):
         sex (None | str | Unset):
+        package_size_id (int | None | Unset):
+        measurement_length (float | None | Unset):
+        measurement_width (float | None | Unset):
         estimated_price (Money | None | Unset):
         purchase_price (Money | None | Unset):
         purchase_date (datetime.datetime | None | Unset):
+        purchase_place_id (int | None | Unset):
         selling_price (Money | None | Unset):
         selling_date (datetime.datetime | None | Unset):
+        selling_place_id (int | None | Unset):
     """
 
     id: int
@@ -49,6 +61,10 @@ class Item:
     color_ids: list[int]
     labels: list[str]
     sold: bool
+    material_ids: list[int]
+    enum_values: list[ItemEnumValue]
+    attributes: list[ItemAttribute]
+    custom_fields: list[ItemCustomField]
     created_at: datetime.datetime
     updated_at: datetime.datetime
     sku: None | str | Unset = UNSET
@@ -58,11 +74,16 @@ class Item:
     size_id: int | None | Unset = UNSET
     state: int | None | Unset = UNSET
     sex: None | str | Unset = UNSET
+    package_size_id: int | None | Unset = UNSET
+    measurement_length: float | None | Unset = UNSET
+    measurement_width: float | None | Unset = UNSET
     estimated_price: Money | None | Unset = UNSET
     purchase_price: Money | None | Unset = UNSET
     purchase_date: datetime.datetime | None | Unset = UNSET
+    purchase_place_id: int | None | Unset = UNSET
     selling_price: Money | None | Unset = UNSET
     selling_date: datetime.datetime | None | Unset = UNSET
+    selling_place_id: int | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -82,6 +103,23 @@ class Item:
         labels = self.labels
 
         sold = self.sold
+
+        material_ids = self.material_ids
+
+        enum_values = []
+        for enum_values_item_data in self.enum_values:
+            enum_values_item = enum_values_item_data.to_dict()
+            enum_values.append(enum_values_item)
+
+        attributes = []
+        for attributes_item_data in self.attributes:
+            attributes_item = attributes_item_data.to_dict()
+            attributes.append(attributes_item)
+
+        custom_fields = []
+        for custom_fields_item_data in self.custom_fields:
+            custom_fields_item = custom_fields_item_data.to_dict()
+            custom_fields.append(custom_fields_item)
 
         created_at = self.created_at.isoformat()
 
@@ -129,6 +167,24 @@ class Item:
         else:
             sex = self.sex
 
+        package_size_id: int | None | Unset
+        if isinstance(self.package_size_id, Unset):
+            package_size_id = UNSET
+        else:
+            package_size_id = self.package_size_id
+
+        measurement_length: float | None | Unset
+        if isinstance(self.measurement_length, Unset):
+            measurement_length = UNSET
+        else:
+            measurement_length = self.measurement_length
+
+        measurement_width: float | None | Unset
+        if isinstance(self.measurement_width, Unset):
+            measurement_width = UNSET
+        else:
+            measurement_width = self.measurement_width
+
         estimated_price: dict[str, Any] | None | Unset
         if isinstance(self.estimated_price, Unset):
             estimated_price = UNSET
@@ -153,6 +209,12 @@ class Item:
         else:
             purchase_date = self.purchase_date
 
+        purchase_place_id: int | None | Unset
+        if isinstance(self.purchase_place_id, Unset):
+            purchase_place_id = UNSET
+        else:
+            purchase_place_id = self.purchase_place_id
+
         selling_price: dict[str, Any] | None | Unset
         if isinstance(self.selling_price, Unset):
             selling_price = UNSET
@@ -169,6 +231,12 @@ class Item:
         else:
             selling_date = self.selling_date
 
+        selling_place_id: int | None | Unset
+        if isinstance(self.selling_place_id, Unset):
+            selling_place_id = UNSET
+        else:
+            selling_place_id = self.selling_place_id
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -179,6 +247,10 @@ class Item:
                 "colorIds": color_ids,
                 "labels": labels,
                 "sold": sold,
+                "materialIds": material_ids,
+                "enumValues": enum_values,
+                "attributes": attributes,
+                "customFields": custom_fields,
                 "createdAt": created_at,
                 "updatedAt": updated_at,
             }
@@ -197,21 +269,34 @@ class Item:
             field_dict["state"] = state
         if sex is not UNSET:
             field_dict["sex"] = sex
+        if package_size_id is not UNSET:
+            field_dict["packageSizeId"] = package_size_id
+        if measurement_length is not UNSET:
+            field_dict["measurementLength"] = measurement_length
+        if measurement_width is not UNSET:
+            field_dict["measurementWidth"] = measurement_width
         if estimated_price is not UNSET:
             field_dict["estimatedPrice"] = estimated_price
         if purchase_price is not UNSET:
             field_dict["purchasePrice"] = purchase_price
         if purchase_date is not UNSET:
             field_dict["purchaseDate"] = purchase_date
+        if purchase_place_id is not UNSET:
+            field_dict["purchasePlaceId"] = purchase_place_id
         if selling_price is not UNSET:
             field_dict["sellingPrice"] = selling_price
         if selling_date is not UNSET:
             field_dict["sellingDate"] = selling_date
+        if selling_place_id is not UNSET:
+            field_dict["sellingPlaceId"] = selling_place_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any]) -> Self:
+        from ..models.item_attribute import ItemAttribute
+        from ..models.item_custom_field import ItemCustomField
+        from ..models.item_enum_value import ItemEnumValue
         from ..models.item_photo import ItemPhoto
         from ..models.money import Money
 
@@ -232,6 +317,29 @@ class Item:
         labels = cast(list[str], d.pop("labels"))
 
         sold = d.pop("sold")
+
+        material_ids = cast(list[int], d.pop("materialIds"))
+
+        enum_values = []
+        _enum_values = d.pop("enumValues")
+        for enum_values_item_data in _enum_values:
+            enum_values_item = ItemEnumValue.from_dict(enum_values_item_data)
+
+            enum_values.append(enum_values_item)
+
+        attributes = []
+        _attributes = d.pop("attributes")
+        for attributes_item_data in _attributes:
+            attributes_item = ItemAttribute.from_dict(attributes_item_data)
+
+            attributes.append(attributes_item)
+
+        custom_fields = []
+        _custom_fields = d.pop("customFields")
+        for custom_fields_item_data in _custom_fields:
+            custom_fields_item = ItemCustomField.from_dict(custom_fields_item_data)
+
+            custom_fields.append(custom_fields_item)
 
         created_at = datetime.datetime.fromisoformat(d.pop("createdAt"))
 
@@ -300,6 +408,35 @@ class Item:
 
         sex = _parse_sex(d.pop("sex", UNSET))
 
+        def _parse_package_size_id(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        package_size_id = _parse_package_size_id(d.pop("packageSizeId", UNSET))
+
+        def _parse_measurement_length(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        measurement_length = _parse_measurement_length(
+            d.pop("measurementLength", UNSET)
+        )
+
+        def _parse_measurement_width(data: object) -> float | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(float | None | Unset, data)
+
+        measurement_width = _parse_measurement_width(d.pop("measurementWidth", UNSET))
+
         def _parse_estimated_price(data: object) -> Money | None | Unset:
             if data is None:
                 return data
@@ -351,6 +488,15 @@ class Item:
 
         purchase_date = _parse_purchase_date(d.pop("purchaseDate", UNSET))
 
+        def _parse_purchase_place_id(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        purchase_place_id = _parse_purchase_place_id(d.pop("purchasePlaceId", UNSET))
+
         def _parse_selling_price(data: object) -> Money | None | Unset:
             if data is None:
                 return data
@@ -385,6 +531,15 @@ class Item:
 
         selling_date = _parse_selling_date(d.pop("sellingDate", UNSET))
 
+        def _parse_selling_place_id(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        selling_place_id = _parse_selling_place_id(d.pop("sellingPlaceId", UNSET))
+
         item = cls(
             id=id,
             name=name,
@@ -392,6 +547,10 @@ class Item:
             color_ids=color_ids,
             labels=labels,
             sold=sold,
+            material_ids=material_ids,
+            enum_values=enum_values,
+            attributes=attributes,
+            custom_fields=custom_fields,
             created_at=created_at,
             updated_at=updated_at,
             sku=sku,
@@ -401,11 +560,16 @@ class Item:
             size_id=size_id,
             state=state,
             sex=sex,
+            package_size_id=package_size_id,
+            measurement_length=measurement_length,
+            measurement_width=measurement_width,
             estimated_price=estimated_price,
             purchase_price=purchase_price,
             purchase_date=purchase_date,
+            purchase_place_id=purchase_place_id,
             selling_price=selling_price,
             selling_date=selling_date,
+            selling_place_id=selling_place_id,
         )
 
         item.additional_properties = d

@@ -40,6 +40,7 @@ def item(id, sex="WOMEN"):
     return {
         "id": id, "name": "n", "sku": None, "description": None, "photos": [], "categoryId": None, "brandId": None,
         "sizeId": None, "colorIds": [], "state": None, "sex": sex, "labels": [], "sold": False,
+        "materialIds": [], "enumValues": [], "attributes": [], "customFields": [],
         "estimatedPrice": {"amount": "12.50", "currency": "EUR"}, "purchasePrice": None, "purchaseDate": None,
         "sellingPrice": None, "sellingDate": None, "createdAt": "2026-10-20T10:00:00Z",
         "updatedAt": "2026-10-20T10:00:00Z", "unknownField": 1,

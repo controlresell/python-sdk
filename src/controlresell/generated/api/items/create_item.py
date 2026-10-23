@@ -117,8 +117,19 @@ def sync_detailed(
     publishing it: publish it with `POST /items/{id}/publish`. Only `name` is required. The amounts are
     `{amount, currency}` in the item's currency (EUR for a new item; another currency is refused with
     `422 currency_mismatch`). `photoIds` are files already in the seller's library: another seller's, or
-    an unknown one, is `404 photo_not_found`. A label the seller does not have yet is created. Requires
-    `items:write` and an `Idempotency-Key`.
+    an unknown one, is `404 photo_not_found`. A label the seller does not have yet is created. The
+    fields a marketplace asks for are written with the item: `packageSizeId`, `materialIds`,
+    `measurementLength` and `measurementWidth` (centimeters), `enumValues` (the category's enumerated
+    fields, `{enumKey, enumValue}`, one entry per picked value), `attributes` (its free-text fields,
+    `{fieldKey, value}`, one per key) and `customFields` (the seller's own fields, `{fieldId, value}`);
+    each list replaces the item's whole list. A place (`purchasePlaceId`, `sellingPlaceId`) or a custom
+    field of another seller, or an unknown one, is `404 place_not_found` or `404 field_not_found`.
+    `categoryId`, `sizeId` and `state` are ids from 1 (`0` is a 400, `null` clears them). Keys and
+    enumerated values are trimmed and counted in characters (UTF-16 units), 1 to 100 for a key and 1 to
+    255 for a value; two entries that differ only by case or accents (as the database compares them) are
+    a 400. At most 100 entries per list, and 65,535 bytes (UTF-8) per free-text value. Read back,
+    `enumValues`, `attributes` and `customFields` are sorted by key (then value, or field id), as plain
+    strings (upper case before lower case). Requires `items:write` and an `Idempotency-Key`.
 
     Args:
         idempotency_key (str):
@@ -156,8 +167,19 @@ def sync(
     publishing it: publish it with `POST /items/{id}/publish`. Only `name` is required. The amounts are
     `{amount, currency}` in the item's currency (EUR for a new item; another currency is refused with
     `422 currency_mismatch`). `photoIds` are files already in the seller's library: another seller's, or
-    an unknown one, is `404 photo_not_found`. A label the seller does not have yet is created. Requires
-    `items:write` and an `Idempotency-Key`.
+    an unknown one, is `404 photo_not_found`. A label the seller does not have yet is created. The
+    fields a marketplace asks for are written with the item: `packageSizeId`, `materialIds`,
+    `measurementLength` and `measurementWidth` (centimeters), `enumValues` (the category's enumerated
+    fields, `{enumKey, enumValue}`, one entry per picked value), `attributes` (its free-text fields,
+    `{fieldKey, value}`, one per key) and `customFields` (the seller's own fields, `{fieldId, value}`);
+    each list replaces the item's whole list. A place (`purchasePlaceId`, `sellingPlaceId`) or a custom
+    field of another seller, or an unknown one, is `404 place_not_found` or `404 field_not_found`.
+    `categoryId`, `sizeId` and `state` are ids from 1 (`0` is a 400, `null` clears them). Keys and
+    enumerated values are trimmed and counted in characters (UTF-16 units), 1 to 100 for a key and 1 to
+    255 for a value; two entries that differ only by case or accents (as the database compares them) are
+    a 400. At most 100 entries per list, and 65,535 bytes (UTF-8) per free-text value. Read back,
+    `enumValues`, `attributes` and `customFields` are sorted by key (then value, or field id), as plain
+    strings (upper case before lower case). Requires `items:write` and an `Idempotency-Key`.
 
     Args:
         idempotency_key (str):
@@ -190,8 +212,19 @@ async def asyncio_detailed(
     publishing it: publish it with `POST /items/{id}/publish`. Only `name` is required. The amounts are
     `{amount, currency}` in the item's currency (EUR for a new item; another currency is refused with
     `422 currency_mismatch`). `photoIds` are files already in the seller's library: another seller's, or
-    an unknown one, is `404 photo_not_found`. A label the seller does not have yet is created. Requires
-    `items:write` and an `Idempotency-Key`.
+    an unknown one, is `404 photo_not_found`. A label the seller does not have yet is created. The
+    fields a marketplace asks for are written with the item: `packageSizeId`, `materialIds`,
+    `measurementLength` and `measurementWidth` (centimeters), `enumValues` (the category's enumerated
+    fields, `{enumKey, enumValue}`, one entry per picked value), `attributes` (its free-text fields,
+    `{fieldKey, value}`, one per key) and `customFields` (the seller's own fields, `{fieldId, value}`);
+    each list replaces the item's whole list. A place (`purchasePlaceId`, `sellingPlaceId`) or a custom
+    field of another seller, or an unknown one, is `404 place_not_found` or `404 field_not_found`.
+    `categoryId`, `sizeId` and `state` are ids from 1 (`0` is a 400, `null` clears them). Keys and
+    enumerated values are trimmed and counted in characters (UTF-16 units), 1 to 100 for a key and 1 to
+    255 for a value; two entries that differ only by case or accents (as the database compares them) are
+    a 400. At most 100 entries per list, and 65,535 bytes (UTF-8) per free-text value. Read back,
+    `enumValues`, `attributes` and `customFields` are sorted by key (then value, or field id), as plain
+    strings (upper case before lower case). Requires `items:write` and an `Idempotency-Key`.
 
     Args:
         idempotency_key (str):
@@ -227,8 +260,19 @@ async def asyncio(
     publishing it: publish it with `POST /items/{id}/publish`. Only `name` is required. The amounts are
     `{amount, currency}` in the item's currency (EUR for a new item; another currency is refused with
     `422 currency_mismatch`). `photoIds` are files already in the seller's library: another seller's, or
-    an unknown one, is `404 photo_not_found`. A label the seller does not have yet is created. Requires
-    `items:write` and an `Idempotency-Key`.
+    an unknown one, is `404 photo_not_found`. A label the seller does not have yet is created. The
+    fields a marketplace asks for are written with the item: `packageSizeId`, `materialIds`,
+    `measurementLength` and `measurementWidth` (centimeters), `enumValues` (the category's enumerated
+    fields, `{enumKey, enumValue}`, one entry per picked value), `attributes` (its free-text fields,
+    `{fieldKey, value}`, one per key) and `customFields` (the seller's own fields, `{fieldId, value}`);
+    each list replaces the item's whole list. A place (`purchasePlaceId`, `sellingPlaceId`) or a custom
+    field of another seller, or an unknown one, is `404 place_not_found` or `404 field_not_found`.
+    `categoryId`, `sizeId` and `state` are ids from 1 (`0` is a 400, `null` clears them). Keys and
+    enumerated values are trimmed and counted in characters (UTF-16 units), 1 to 100 for a key and 1 to
+    255 for a value; two entries that differ only by case or accents (as the database compares them) are
+    a 400. At most 100 entries per list, and 65,535 bytes (UTF-8) per free-text value. Read back,
+    `enumValues`, `attributes` and `customFields` are sorted by key (then value, or field id), as plain
+    strings (upper case before lower case). Requires `items:write` and an `Idempotency-Key`.
 
     Args:
         idempotency_key (str):
