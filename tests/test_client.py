@@ -6,6 +6,7 @@ import pytest
 from controlresell import (
     IDEMPOTENCY_KEY_HEADER,
     ConflictError,
+    ControlResellConnectionError,
     ControlResell,
     NotFoundError,
     RateLimitError,
@@ -527,3 +528,50 @@ def test_webhooks_rotate_secret_sends_the_overlap_and_delete_resolves_on_204():
     assert sdk.webhooks.rotate_secret(ENDPOINT_ID, expires_in_hours=0).secret == "whsec_new"
     assert json.loads(requests[0].content) == {"expiresInHours": 0}
     assert sdk.webhooks.delete_endpoint(ENDPOINT_ID) is None
+
+
+@pytest.mark.parametrize("status", [500, 502, 503, 504])
+def test_webhooks_test_is_never_replayed_after_a_5xx(status):
+    requests, sdk = client(lambda request: reply(envelope("unavailable"), status))
+    with pytest.raises(ServerError):
+        sdk.webhooks.test(ENDPOINT_ID)
+    assert len(requests) == 1
+
+
+def test_webhooks_test_is_never_replayed_after_a_lost_connection():
+    def handler(request):
+        raise httpx.ReadError("connection lost", request=request)
+
+    requests, sdk = client(handler)
+    with pytest.raises(ControlResellConnectionError):
+        sdk.webhooks.test(ENDPOINT_ID)
+    assert len(requests) == 1
+
+
+def test_webhooks_test_is_replayed_after_a_failed_connect_or_a_429_but_other_calls_keep_the_retries():
+    def refused_once(request):
+        if len(requests) == 1:
+            raise httpx.ConnectError("refused", request=request)
+        return reply({"success": True, "statusCode": 200, "durationMs": 12, "error": None})
+
+    requests, sdk = client(refused_once)
+    assert sdk.webhooks.test(ENDPOINT_ID).success is True
+    assert len(requests) == 2
+
+    def busy_once(request):
+        if len(requests) == 1:
+            return reply(envelope("webhook_endpoint_busy"), 429, {"Retry-After": "0"})
+        return reply({"success": True, "statusCode": 200, "durationMs": 12, "error": None})
+
+    requests, sdk = client(busy_once)
+    assert sdk.webhooks.test(ENDPOINT_ID).success is True
+    assert len(requests) == 2
+
+    def unavailable_once(request):
+        if len(requests) == 1:
+            return reply(envelope("unavailable"), 503)
+        return reply({"id": 1, "username": "u", "currency": "EUR"})
+
+    requests, sdk = client(unavailable_once)
+    sdk.me.get()
+    assert len(requests) == 2

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+import re
 import time
 import uuid
 from dataclasses import dataclass
@@ -59,6 +60,15 @@ def _should_retry(response: httpx.Response) -> bool:
     return response.status_code in _RETRIED_STATUSES or _in_progress(response)
 
 
+_WEBHOOK_TEST_PATH = re.compile(r"/webhook-endpoints/[^/]+/test/?$")
+
+
+def _is_webhook_test(request: httpx.Request) -> bool:
+    """``POST /webhook-endpoints/{id}/test`` sends a real event and the API ignores its key: a replay would send a
+    second event. It is retried on a 429 (answered before the event leaves) and on a failed connect, nothing else."""
+    return request.method == "POST" and _WEBHOOK_TEST_PATH.search(request.url.path) is not None
+
+
 def _with_key(request: httpx.Request) -> None:
     if request.method == "POST" and IDEMPOTENCY_KEY_HEADER not in request.headers:
         request.headers[IDEMPOTENCY_KEY_HEADER] = str(uuid.uuid4())
@@ -66,7 +76,8 @@ def _with_key(request: httpx.Request) -> None:
 
 class RetryTransport(httpx.BaseTransport):
     """Gives each ``POST`` an ``Idempotency-Key`` (kept across its retries), retries the statuses above and network
-    errors, and waits for ``Retry-After`` when the API sends it."""
+    errors, and waits for ``Retry-After`` when the API sends it. The webhook test call is retried on a 429 and on a
+    failed connect only."""
 
     def __init__(self, base: httpx.BaseTransport, policy: RetryPolicy | None = None) -> None:
         self._base = base
@@ -74,13 +85,14 @@ class RetryTransport(httpx.BaseTransport):
 
     def handle_request(self, request: httpx.Request) -> httpx.Response:
         _with_key(request)
+        replayable = not _is_webhook_test(request)
         attempt = 0
         while True:
             last = attempt >= self._policy.max_retries
             try:
                 response = self._base.handle_request(request)
             except httpx.TransportError as cause:
-                if last:
+                if last or (not replayable and not isinstance(cause, (httpx.ConnectError, httpx.ConnectTimeout))):
                     raise ControlResellConnectionError(cause) from cause
                 time.sleep(self._policy.backoff(attempt))
                 attempt += 1
@@ -88,7 +100,7 @@ class RetryTransport(httpx.BaseTransport):
             if last:
                 return response
             response.read()
-            if not _should_retry(response):
+            if (not replayable and response.status_code != 429) or not _should_retry(response):
                 return response
             time.sleep(_delay(self._policy, response, attempt))
             response.close()
