@@ -368,6 +368,80 @@ def test_customers_get_reads_one_customer():
     assert requests[0].url.path == f"/api/public/v1/customers/{ACCOUNT}"
 
 
+FAVORITE = {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "accountId": "11111111-1111-1111-1111-111111111111",
+    "platform": "VINTED",
+    "buyerId": "b1",
+    "createdAt": "2026-10-24T00:00:00Z",
+    "messageSentAt": None,
+    "listingId": "L1",
+    "item": {"id": 42, "name": "Jacket", "price": {"amount": "12.50", "currency": "EUR"}, "sold": False},
+}
+
+
+def test_favorites_iter_follows_the_cursor_with_the_same_filters():
+    import datetime
+
+    seen = []
+
+    def handler(request):
+        seen.append(request.url)
+        if request.url.params.get("cursor"):
+            return reply({"data": [{**FAVORITE, "buyerId": "b2", "item": None}], "nextCursor": None})
+        return reply({"data": [FAVORITE], "nextCursor": "c2"})
+
+    _, sdk = client(handler)
+    start = datetime.datetime(2026, 10, 1, tzinfo=datetime.timezone.utc)
+    favorites = list(sdk.favorites.iter(account_id=ACCOUNT, item_id=42, from_=start, limit=1))
+    assert [f.buyer_id for f in favorites] == ["b1", "b2"]
+    assert favorites[0].item.name == "Jacket" and favorites[1].item is None
+    assert [u.path for u in seen] == ["/api/public/v1/favorites"] * 2
+    assert [u.params["itemId"] for u in seen] == ["42", "42"] and [u.params["accountId"] for u in seen] == [ACCOUNT] * 2
+    assert seen[0].params["from"] == start.isoformat() and seen[1].params["cursor"] == "c2"
+
+
+def test_favorites_iter_item_reads_the_favorites_of_one_item():
+    requests, sdk = client(lambda r: reply({"data": [FAVORITE], "nextCursor": None}))
+    assert [f.buyer_id for f in sdk.favorites.iter_item(42)] == ["b1"]
+    assert requests[0].url.path == "/api/public/v1/items/42/favorites"
+
+
+def test_conversations_list_sends_the_buyer_item_and_offer_status_filters():
+    requests, sdk = client(lambda r: reply({"data": [], "nextCursor": None}))
+    sdk.conversations.list(buyer_id="b-1", item_id=42, offer_status="PENDING")
+    params = requests[0].url.params
+    assert params["buyerId"] == "b-1" and params["itemId"] == "42" and params["offerStatus"] == "PENDING"
+
+
+def test_catalogs_iter_brands_follows_the_cursor_with_the_same_query():
+    seen = []
+
+    def handler(request):
+        seen.append(request.url)
+        if request.url.params.get("cursor"):
+            return reply({"data": [{"id": 2, "name": "Nikon", "custom": True}], "nextCursor": None})
+        return reply({"data": [{"id": 1, "name": "Nike", "custom": False}], "nextCursor": "c2"})
+
+    _, sdk = client(handler)
+    assert [b.name for b in sdk.catalogs.iter_brands(q="nik")] == ["Nike", "Nikon"]
+    assert [u.path for u in seen] == ["/api/public/v1/catalogs/brands"] * 2
+    assert [u.params["q"] for u in seen] == ["nik", "nik"] and seen[1].params["cursor"] == "c2"
+
+
+def test_catalogs_colors_send_the_category_and_read_the_values():
+    requests, sdk = client(lambda r: reply({"data": [{"id": 3, "key": "red", "title": "Red"}], "nextCursor": None}))
+    assert sdk.catalogs.colors(category_id=12).data[0].title == "Red"
+    assert requests[0].url.path == "/api/public/v1/catalogs/colors" and requests[0].url.params["categoryId"] == "12"
+
+
+def test_catalogs_category_fields_reads_the_fields_of_one_category():
+    body = {"categoryId": 12, "sizeGroupIds": [1], "enumFields": [], "textFields": [], "measurements": []}
+    requests, sdk = client(lambda r: reply(body))
+    assert sdk.catalogs.category_fields(12).category_id == 12
+    assert requests[0].url.path == "/api/public/v1/catalogs/categories/12/fields"
+
+
 def test_conversations_messages_and_list_send_the_from_and_to_window():
     import datetime
 
@@ -378,3 +452,78 @@ def test_conversations_messages_and_list_send_the_from_and_to_window():
     first, second = (r.url.params for r in requests)
     assert first["from"] == "2026-10-01T00:00:00+00:00" and first["to"] == "2026-10-02T00:00:00+00:00"
     assert second["from"] == "2026-10-01T00:00:00+00:00" and "to" not in second
+
+
+ENDPOINT_ID = "0b6f3c1e-8d43-4a4c-9a55-7f1f2c3d4e5f"
+ENDPOINT = {
+    "id": ENDPOINT_ID, "url": "https://example.com/hook", "description": None, "eventTypes": ["item.sold"],
+    "payloadMode": "light", "status": "enabled", "apiVersion": "v1", "createdAt": "2026-10-24T00:00:00Z",
+    "updatedAt": "2026-10-24T00:00:00Z",
+}
+
+
+def test_webhooks_create_endpoint_posts_with_a_key_and_returns_the_secret():
+    from controlresell.generated.models import WebhookEndpointCreateRequest
+
+    requests, sdk = client(lambda r: reply({"endpoint": ENDPOINT, "secret": "whsec_abc"}, 201))
+    created = sdk.webhooks.create_endpoint(WebhookEndpointCreateRequest(url="https://example.com/hook", event_types=["item.sold"]))
+    assert created.secret == "whsec_abc" and created.endpoint.status == "enabled"
+    request = requests[0]
+    assert request.method == "POST" and request.url.path == "/api/public/v1/webhook-endpoints"
+    assert request.headers[IDEMPOTENCY_KEY_HEADER] and json.loads(request.content)["eventTypes"] == ["item.sold"]
+
+
+def test_webhooks_update_endpoint_sends_an_explicit_null_to_clear_the_description():
+    from controlresell.generated.models import WebhookEndpointUpdateRequest
+
+    requests, sdk = client(lambda r: reply(ENDPOINT))
+    sdk.webhooks.update_endpoint(ENDPOINT_ID, WebhookEndpointUpdateRequest(description=None))
+    assert requests[0].method == "PATCH" and json.loads(requests[0].content) == {"description": None}
+
+
+def test_webhooks_iter_events_follows_the_cursor_with_the_same_types_and_reads_any_data():
+    def handler(request):
+        if "cursor" not in request.url.params:
+            return reply({"data": [{"id": "0192f3c1-0000-7000-8000-000000000001", "type": "item.sold",
+                                    "createdAt": "2026-10-24T00:00:00Z", "apiVersion": "v1", "sellerId": 7,
+                                    "data": {"itemId": 42, "source": "order", "object": None}}], "nextCursor": "c2"})
+        return reply({"data": [{"id": "0192f3c1-0000-7000-8000-000000000002", "type": "order.created",
+                                "createdAt": "2026-10-24T00:01:00Z", "apiVersion": "v1", "sellerId": 7,
+                                "data": {"orderId": "o1", "items": [1, 2]}}], "nextCursor": None})
+
+    requests, sdk = client(handler)
+    events = list(sdk.webhooks.iter_events(types=["item.sold", "order.created"]))
+    assert [e.type_ for e in events] == ["item.sold", "order.created"]
+    assert events[0].data["itemId"] == 42 and events[1].data["items"] == [1, 2]
+    assert [r.url.params["type"] for r in requests] == ["item.sold,order.created"] * 2
+    assert requests[1].url.params["cursor"] == "c2"
+
+
+def test_webhooks_deliveries_send_the_filters_and_retry_posts_to_the_delivery():
+    delivery = {"id": "11111111-2222-3333-4444-555555555555", "eventId": "11111111-2222-3333-4444-666666666666",
+                "eventType": "item.sold", "status": "failed", "attempt": 3, "createdAt": "2026-10-24T00:00:00Z",
+                "updatedAt": "2026-10-24T00:00:00Z"}
+
+    def handler(request):
+        if request.method == "GET":
+            return reply({"data": [delivery], "nextCursor": None})
+        return reply(delivery, 202)
+
+    requests, sdk = client(handler)
+    assert sdk.webhooks.deliveries(ENDPOINT_ID, status="failed").data[0].attempt == 3
+    sdk.webhooks.retry_delivery(ENDPOINT_ID, delivery["id"])
+    assert requests[0].url.path == f"/api/public/v1/webhook-endpoints/{ENDPOINT_ID}/deliveries"
+    assert requests[0].url.params["status"] == "failed"
+    assert requests[1].url.path == f"/api/public/v1/webhook-endpoints/{ENDPOINT_ID}/deliveries/{delivery['id']}/retry"
+
+
+def test_webhooks_rotate_secret_sends_the_overlap_and_delete_resolves_on_204():
+    def handler(request):
+        if request.method == "DELETE":
+            return httpx.Response(204)
+        return reply({"secret": "whsec_new", "previousSecretExpiresAt": "2026-10-25T00:00:00Z"})
+
+    requests, sdk = client(handler)
+    assert sdk.webhooks.rotate_secret(ENDPOINT_ID, expires_in_hours=0).secret == "whsec_new"
+    assert json.loads(requests[0].content) == {"expiresInHours": 0}
+    assert sdk.webhooks.delete_endpoint(ENDPOINT_ID) is None
