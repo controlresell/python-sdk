@@ -33,15 +33,51 @@ from .generated.api.items import (
     republish_item,
     update_item,
 )
+from .generated.api.catalogs import (
+    get_catalog_category,
+    get_catalog_category_fields,
+    list_catalog_brands,
+    list_catalog_categories,
+    list_catalog_colors,
+    list_catalog_conditions,
+    list_catalog_materials,
+    list_catalog_package_sizes,
+    list_catalog_sizes,
+)
 from .generated.api.customers import get_customer, list_customers
+from .generated.api.webhooks import (
+    create_webhook_endpoint,
+    delete_webhook_endpoint,
+    get_webhook_endpoint,
+    get_webhook_secret,
+    list_webhook_deliveries,
+    list_webhook_endpoints,
+    list_webhook_event_types,
+    list_webhook_events,
+    recover_webhook_deliveries,
+    retry_webhook_delivery,
+    rotate_webhook_secret,
+    test_webhook_endpoint,
+    update_webhook_endpoint,
+)
 from .generated.api.me import get_me
 from .generated.api.orders import get_order, list_labels_to_ship, list_order_labels, list_orders
 from .generated.client import AuthenticatedClient
 from .generated.models import (
     Account,
     AccountPage,
+    CatalogBrand,
+    CatalogBrandPage,
+    CatalogCategory,
+    CatalogCategoryFields,
+    CatalogCategoryPage,
+    CatalogSize,
+    CatalogSizePage,
+    CatalogValue,
+    CatalogValuePage,
     Conversation,
     ConversationPage,
+    CreatedWebhookEndpoint,
     Customer,
     CustomerPage,
     Item,
@@ -62,6 +98,20 @@ from .generated.models import (
     ScheduledAction,
     SendMessageRequest,
     SendOfferRequest,
+    WebhookDelivery,
+    WebhookDeliveryPage,
+    WebhookEndpoint,
+    WebhookEndpointCreateRequest,
+    WebhookEndpointPage,
+    WebhookEndpointUpdateRequest,
+    WebhookEvent,
+    WebhookEventPage,
+    WebhookEventTypeList,
+    WebhookRecoverRequest,
+    WebhookRecovery,
+    WebhookSecret,
+    WebhookSecretRotateRequest,
+    WebhookTestResult,
 )
 from .generated.types import UNSET
 from .pagination import paginate
@@ -113,6 +163,8 @@ class ControlResell:
         self.conversations = _Conversations(self)
         self.orders = _Orders(self)
         self.customers = _Customers(self)
+        self.catalogs = _Catalogs(self)
+        self.webhooks = _Webhooks(self)
 
     @property
     def http(self) -> httpx.Client:
@@ -430,3 +482,243 @@ class _Customers:
     ) -> Iterator[Customer]:
         """Every customer, page after page, with the same filters."""
         return paginate(lambda cursor: self.list(limit=limit, cursor=cursor, account_id=account_id, from_=from_, to=to))
+
+
+class _Catalogs:
+    """The catalog an item is written with: categories, brands, sizes, colors... (needs the ``items:read`` scope).
+
+    Every ``category_id`` keeps what applies to one category.
+    """
+
+    def __init__(self, sdk: ControlResell) -> None:
+        self._sdk = sdk
+
+    def categories(
+        self,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        parent_id: int | None = None,
+        platform: str | None = None,
+    ) -> CatalogCategoryPage:
+        """One page of categories, flat, by identifier; ``parent_id`` keeps the children of one, ``platform`` one marketplace."""
+        return self._sdk._call(  # noqa: SLF001
+            list_catalog_categories, **_query(limit=limit, cursor=cursor, parent_id=parent_id, platform=platform)
+        )
+
+    def iter_categories(
+        self, *, limit: int | None = None, parent_id: int | None = None, platform: str | None = None
+    ) -> Iterator[CatalogCategory]:
+        """Every category, page after page, with the same filters."""
+        return paginate(
+            lambda cursor: self.categories(limit=limit, cursor=cursor, parent_id=parent_id, platform=platform)
+        )
+
+    def category(self, id: int) -> CatalogCategory:
+        """One category by its identifier."""
+        return self._sdk._call(get_catalog_category, id=id)  # noqa: SLF001
+
+    def category_fields(self, id: int) -> CatalogCategoryFields:
+        """What an item of a category is filled with: its size groups, enumerated and text fields, measurements."""
+        return self._sdk._call(get_catalog_category_fields, id=id)  # noqa: SLF001
+
+    def brands(self, *, limit: int | None = None, cursor: str | None = None, q: str | None = None) -> CatalogBrandPage:
+        """One page of brands, by identifier or, with ``q``, those whose name starts with it."""
+        return self._sdk._call(list_catalog_brands, **_query(limit=limit, cursor=cursor, q=q))  # noqa: SLF001
+
+    def iter_brands(self, *, limit: int | None = None, q: str | None = None) -> Iterator[CatalogBrand]:
+        """Every brand, page after page, with the same filters."""
+        return paginate(lambda cursor: self.brands(limit=limit, cursor=cursor, q=q))
+
+    def sizes(
+        self, *, limit: int | None = None, cursor: str | None = None, category_id: int | None = None
+    ) -> CatalogSizePage:
+        """One page of sizes, each with its size group."""
+        return self._sdk._call(  # noqa: SLF001
+            list_catalog_sizes, **_query(limit=limit, cursor=cursor, category_id=category_id)
+        )
+
+    def iter_sizes(self, *, limit: int | None = None, category_id: int | None = None) -> Iterator[CatalogSize]:
+        """Every size, page after page, with the same filters."""
+        return paginate(lambda cursor: self.sizes(limit=limit, cursor=cursor, category_id=category_id))
+
+    def colors(
+        self, *, limit: int | None = None, cursor: str | None = None, category_id: int | None = None
+    ) -> CatalogValuePage:
+        """One page of colors."""
+        return self._sdk._call(  # noqa: SLF001
+            list_catalog_colors, **_query(limit=limit, cursor=cursor, category_id=category_id)
+        )
+
+    def iter_colors(self, *, limit: int | None = None, category_id: int | None = None) -> Iterator[CatalogValue]:
+        """Every one of the colors, page after page, with the same filters."""
+        return paginate(lambda cursor: self.colors(limit=limit, cursor=cursor, category_id=category_id))
+
+    def conditions(
+        self, *, limit: int | None = None, cursor: str | None = None, category_id: int | None = None
+    ) -> CatalogValuePage:
+        """One page of conditions."""
+        return self._sdk._call(  # noqa: SLF001
+            list_catalog_conditions, **_query(limit=limit, cursor=cursor, category_id=category_id)
+        )
+
+    def iter_conditions(self, *, limit: int | None = None, category_id: int | None = None) -> Iterator[CatalogValue]:
+        """Every one of the conditions, page after page, with the same filters."""
+        return paginate(lambda cursor: self.conditions(limit=limit, cursor=cursor, category_id=category_id))
+
+    def package_sizes(
+        self, *, limit: int | None = None, cursor: str | None = None, category_id: int | None = None
+    ) -> CatalogValuePage:
+        """One page of package sizes."""
+        return self._sdk._call(  # noqa: SLF001
+            list_catalog_package_sizes, **_query(limit=limit, cursor=cursor, category_id=category_id)
+        )
+
+    def iter_package_sizes(self, *, limit: int | None = None, category_id: int | None = None) -> Iterator[CatalogValue]:
+        """Every one of the package sizes, page after page, with the same filters."""
+        return paginate(lambda cursor: self.package_sizes(limit=limit, cursor=cursor, category_id=category_id))
+
+    def materials(
+        self, *, limit: int | None = None, cursor: str | None = None, category_id: int | None = None
+    ) -> CatalogValuePage:
+        """One page of materials."""
+        return self._sdk._call(  # noqa: SLF001
+            list_catalog_materials, **_query(limit=limit, cursor=cursor, category_id=category_id)
+        )
+
+    def iter_materials(self, *, limit: int | None = None, category_id: int | None = None) -> Iterator[CatalogValue]:
+        """Every one of the materials, page after page, with the same filters."""
+        return paginate(lambda cursor: self.materials(limit=limit, cursor=cursor, category_id=category_id))
+
+
+class _Webhooks:
+    """The seller's webhook endpoints, their secrets and deliveries, and the recent events.
+
+    Reads need the ``webhooks:read`` scope, writes ``webhooks:write``.
+    """
+
+    def __init__(self, sdk: ControlResell) -> None:
+        self._sdk = sdk
+
+    def endpoints(self) -> WebhookEndpointPage:
+        """The seller's endpoints, without their secrets (at most 5: a single page)."""
+        return self._sdk._call(list_webhook_endpoints)  # noqa: SLF001
+
+    def endpoint(self, id: UUID | str) -> WebhookEndpoint:
+        """One endpoint by its identifier."""
+        return self._sdk._call(get_webhook_endpoint, id=UUID(str(id)))  # noqa: SLF001
+
+    def create_endpoint(
+        self, body: WebhookEndpointCreateRequest, *, idempotency_key: str | None = None
+    ) -> CreatedWebhookEndpoint:
+        """Creates an endpoint; the answer carries its signing secret (``secret`` reads it again)."""
+        return self._sdk._call(  # noqa: SLF001
+            create_webhook_endpoint, body=body, idempotency_key=_key(idempotency_key)
+        )
+
+    def update_endpoint(self, id: UUID | str, body: WebhookEndpointUpdateRequest) -> WebhookEndpoint:
+        """Updates the given fields of an endpoint (a JSON merge patch: ``description=None`` clears it).
+
+        ``status="enabled"`` re-enables a disabled endpoint and resets its health.
+        """
+        return self._sdk._call(update_webhook_endpoint, id=UUID(str(id)), body=body)  # noqa: SLF001
+
+    def delete_endpoint(self, id: UUID | str) -> None:
+        """Deletes an endpoint; its pending deliveries are dropped."""
+        self._sdk._call(delete_webhook_endpoint, id=UUID(str(id)))  # noqa: SLF001
+
+    def secret(self, id: UUID | str) -> WebhookSecret:
+        """The current signing secret of an endpoint."""
+        return self._sdk._call(get_webhook_secret, id=UUID(str(id)))  # noqa: SLF001
+
+    def rotate_secret(
+        self,
+        id: UUID | str,
+        *,
+        expires_in_hours: int | None = None,
+        idempotency_key: str | None = None,
+    ) -> WebhookSecret:
+        """Gives an endpoint a new secret; the previous one stays valid ``expires_in_hours`` (24 by default, 0 at once)."""
+        body = WebhookSecretRotateRequest() if expires_in_hours is None else WebhookSecretRotateRequest(
+            expires_in_hours=expires_in_hours
+        )
+        return self._sdk._call(  # noqa: SLF001
+            rotate_webhook_secret, id=UUID(str(id)), body=body, idempotency_key=_key(idempotency_key)
+        )
+
+    def test(self, id: UUID | str) -> WebhookTestResult:
+        """Sends a ``webhook.test`` event to the endpoint now and returns how it answered."""
+        return self._sdk._call(test_webhook_endpoint, id=UUID(str(id)))  # noqa: SLF001
+
+    def deliveries(
+        self,
+        id: UUID | str,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        status: str | None = None,
+        type: str | None = None,  # noqa: A002
+    ) -> WebhookDeliveryPage:
+        """One page of the deliveries of an endpoint over the last 7 days, the most recent first."""
+        return self._sdk._call(  # noqa: SLF001
+            list_webhook_deliveries,
+            id=UUID(str(id)),
+            **_query(limit=limit, cursor=cursor, status=status, type_=type),
+        )
+
+    def iter_deliveries(
+        self,
+        id: UUID | str,
+        *,
+        limit: int | None = None,
+        status: str | None = None,
+        type: str | None = None,  # noqa: A002
+    ) -> Iterator[WebhookDelivery]:
+        """Every delivery of an endpoint, page after page, with the same filters."""
+        return paginate(lambda cursor: self.deliveries(id, limit=limit, cursor=cursor, status=status, type=type))
+
+    def retry_delivery(
+        self, id: UUID | str, delivery_id: UUID | str, *, idempotency_key: str | None = None
+    ) -> WebhookDelivery:
+        """Sends one event to the endpoint again, with the same ``webhook-id``."""
+        return self._sdk._call(  # noqa: SLF001
+            retry_webhook_delivery,
+            id=UUID(str(id)),
+            delivery_id=UUID(str(delivery_id)),
+            idempotency_key=_key(idempotency_key),
+        )
+
+    def recover(
+        self, id: UUID | str, since: datetime.datetime, *, idempotency_key: str | None = None
+    ) -> WebhookRecovery:
+        """Sends again the failed deliveries since ``since`` (7 days at most, 1,000 per call: call again while ``has_more``)."""
+        return self._sdk._call(  # noqa: SLF001
+            recover_webhook_deliveries,
+            id=UUID(str(id)),
+            body=WebhookRecoverRequest(since=_utc(since)),
+            idempotency_key=_key(idempotency_key),
+        )
+
+    def events(
+        self,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        since: datetime.datetime | None = None,
+        types: list[str] | None = None,
+    ) -> WebhookEventPage:
+        """One page of the events of the last 7 days, the oldest first: what a client that was offline catches up."""
+        return self._sdk._call(  # noqa: SLF001
+            list_webhook_events,
+            **_query(limit=limit, cursor=cursor, since=_utc(since), type_=",".join(types) if types else None),
+        )
+
+    def iter_events(
+        self, *, limit: int | None = None, since: datetime.datetime | None = None, types: list[str] | None = None
+    ) -> Iterator[WebhookEvent]:
+        """Every event, page after page, with the same filters."""
+        return paginate(lambda cursor: self.events(limit=limit, cursor=cursor, since=since, types=types))
+
+    def event_types(self) -> WebhookEventTypeList:
+        """The catalog of event types and the scope each one needs."""
+        return self._sdk._call(list_webhook_event_types)  # noqa: SLF001
