@@ -19,6 +19,9 @@ def _get_kwargs(
     account_id: UUID | Unset = UNSET,
     from_: datetime.datetime | Unset = UNSET,
     to: datetime.datetime | Unset = UNSET,
+    buyer_id: str | Unset = UNSET,
+    item_id: int | Unset = UNSET,
+    offer_status: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -43,6 +46,12 @@ def _get_kwargs(
     if not isinstance(to, Unset):
         json_to = to.isoformat()
     params["to"] = json_to
+
+    params["buyerId"] = buyer_id
+
+    params["itemId"] = item_id
+
+    params["offerStatus"] = offer_status
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -118,6 +127,9 @@ def sync_detailed(
     account_id: UUID | Unset = UNSET,
     from_: datetime.datetime | Unset = UNSET,
     to: datetime.datetime | Unset = UNSET,
+    buyer_id: str | Unset = UNSET,
+    item_id: int | Unset = UNSET,
+    offer_status: str | Unset = UNSET,
 ) -> Response[ConversationPage | ErrorResponse]:
     """List the seller's conversations
 
@@ -126,7 +138,12 @@ def sync_detailed(
     the first page to see it. Pass the `nextCursor` of a page as `cursor` with the same filters (a
     cursor reused with other filters is an `invalid_cursor`). `from` and `to` go straight to a period of
     the last message: `from` is inclusive, `to` exclusive, and the period is read page by page like the
-    whole list. Requires `conversations:read`.
+    whole list. `buyerId`, `itemId` and `offerStatus` combine with the other filters (AND): `buyerId` is
+    the buyer's identifier on the marketplace (a conversation's `buyerId`); `itemId` keeps the
+    conversations about the item, through their transactions on the marketplace (a conversation the
+    marketplace ties to no listing of the item is not found); `offerStatus` keeps those with at least
+    one offer currently at that status, and with `itemId` that same offer is on the item. An `itemId`
+    that is not one of the seller's items answers an empty page. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
@@ -135,6 +152,9 @@ def sync_detailed(
         account_id (UUID | Unset):
         from_ (datetime.datetime | Unset):
         to (datetime.datetime | Unset):
+        buyer_id (str | Unset):
+        item_id (int | Unset):
+        offer_status (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -151,6 +171,9 @@ def sync_detailed(
         account_id=account_id,
         from_=from_,
         to=to,
+        buyer_id=buyer_id,
+        item_id=item_id,
+        offer_status=offer_status,
     )
 
     response = client.get_httpx_client().request(
@@ -169,6 +192,9 @@ def sync(
     account_id: UUID | Unset = UNSET,
     from_: datetime.datetime | Unset = UNSET,
     to: datetime.datetime | Unset = UNSET,
+    buyer_id: str | Unset = UNSET,
+    item_id: int | Unset = UNSET,
+    offer_status: str | Unset = UNSET,
 ) -> ConversationPage | ErrorResponse | None:
     """List the seller's conversations
 
@@ -177,7 +203,12 @@ def sync(
     the first page to see it. Pass the `nextCursor` of a page as `cursor` with the same filters (a
     cursor reused with other filters is an `invalid_cursor`). `from` and `to` go straight to a period of
     the last message: `from` is inclusive, `to` exclusive, and the period is read page by page like the
-    whole list. Requires `conversations:read`.
+    whole list. `buyerId`, `itemId` and `offerStatus` combine with the other filters (AND): `buyerId` is
+    the buyer's identifier on the marketplace (a conversation's `buyerId`); `itemId` keeps the
+    conversations about the item, through their transactions on the marketplace (a conversation the
+    marketplace ties to no listing of the item is not found); `offerStatus` keeps those with at least
+    one offer currently at that status, and with `itemId` that same offer is on the item. An `itemId`
+    that is not one of the seller's items answers an empty page. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
@@ -186,6 +217,9 @@ def sync(
         account_id (UUID | Unset):
         from_ (datetime.datetime | Unset):
         to (datetime.datetime | Unset):
+        buyer_id (str | Unset):
+        item_id (int | Unset):
+        offer_status (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -203,6 +237,9 @@ def sync(
         account_id=account_id,
         from_=from_,
         to=to,
+        buyer_id=buyer_id,
+        item_id=item_id,
+        offer_status=offer_status,
     ).parsed
 
 
@@ -215,6 +252,9 @@ async def asyncio_detailed(
     account_id: UUID | Unset = UNSET,
     from_: datetime.datetime | Unset = UNSET,
     to: datetime.datetime | Unset = UNSET,
+    buyer_id: str | Unset = UNSET,
+    item_id: int | Unset = UNSET,
+    offer_status: str | Unset = UNSET,
 ) -> Response[ConversationPage | ErrorResponse]:
     """List the seller's conversations
 
@@ -223,7 +263,12 @@ async def asyncio_detailed(
     the first page to see it. Pass the `nextCursor` of a page as `cursor` with the same filters (a
     cursor reused with other filters is an `invalid_cursor`). `from` and `to` go straight to a period of
     the last message: `from` is inclusive, `to` exclusive, and the period is read page by page like the
-    whole list. Requires `conversations:read`.
+    whole list. `buyerId`, `itemId` and `offerStatus` combine with the other filters (AND): `buyerId` is
+    the buyer's identifier on the marketplace (a conversation's `buyerId`); `itemId` keeps the
+    conversations about the item, through their transactions on the marketplace (a conversation the
+    marketplace ties to no listing of the item is not found); `offerStatus` keeps those with at least
+    one offer currently at that status, and with `itemId` that same offer is on the item. An `itemId`
+    that is not one of the seller's items answers an empty page. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
@@ -232,6 +277,9 @@ async def asyncio_detailed(
         account_id (UUID | Unset):
         from_ (datetime.datetime | Unset):
         to (datetime.datetime | Unset):
+        buyer_id (str | Unset):
+        item_id (int | Unset):
+        offer_status (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -248,6 +296,9 @@ async def asyncio_detailed(
         account_id=account_id,
         from_=from_,
         to=to,
+        buyer_id=buyer_id,
+        item_id=item_id,
+        offer_status=offer_status,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -264,6 +315,9 @@ async def asyncio(
     account_id: UUID | Unset = UNSET,
     from_: datetime.datetime | Unset = UNSET,
     to: datetime.datetime | Unset = UNSET,
+    buyer_id: str | Unset = UNSET,
+    item_id: int | Unset = UNSET,
+    offer_status: str | Unset = UNSET,
 ) -> ConversationPage | ErrorResponse | None:
     """List the seller's conversations
 
@@ -272,7 +326,12 @@ async def asyncio(
     the first page to see it. Pass the `nextCursor` of a page as `cursor` with the same filters (a
     cursor reused with other filters is an `invalid_cursor`). `from` and `to` go straight to a period of
     the last message: `from` is inclusive, `to` exclusive, and the period is read page by page like the
-    whole list. Requires `conversations:read`.
+    whole list. `buyerId`, `itemId` and `offerStatus` combine with the other filters (AND): `buyerId` is
+    the buyer's identifier on the marketplace (a conversation's `buyerId`); `itemId` keeps the
+    conversations about the item, through their transactions on the marketplace (a conversation the
+    marketplace ties to no listing of the item is not found); `offerStatus` keeps those with at least
+    one offer currently at that status, and with `itemId` that same offer is on the item. An `itemId`
+    that is not one of the seller's items answers an empty page. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
@@ -281,6 +340,9 @@ async def asyncio(
         account_id (UUID | Unset):
         from_ (datetime.datetime | Unset):
         to (datetime.datetime | Unset):
+        buyer_id (str | Unset):
+        item_id (int | Unset):
+        offer_status (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -299,5 +361,8 @@ async def asyncio(
             account_id=account_id,
             from_=from_,
             to=to,
+            buyer_id=buyer_id,
+            item_id=item_id,
+            offer_status=offer_status,
         )
     ).parsed

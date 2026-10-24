@@ -23,6 +23,9 @@ from .customer import Customer
 from .customer_address import CustomerAddress
 from .customer_page import CustomerPage
 from .error_response import ErrorResponse
+from .favorite import Favorite
+from .favorite_item import FavoriteItem
+from .favorite_page import FavoritePage
 from .item import Item
 from .item_attribute import ItemAttribute
 from .item_create_request import ItemCreateRequest
@@ -90,6 +93,9 @@ __all__ = (
     "CustomerAddress",
     "CustomerPage",
     "ErrorResponse",
+    "Favorite",
+    "FavoriteItem",
+    "FavoritePage",
     "Item",
     "ItemAttribute",
     "ItemCreateRequest",

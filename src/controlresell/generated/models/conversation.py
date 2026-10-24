@@ -28,6 +28,7 @@ class Conversation:
         updated_at (datetime.datetime):
         platform (None | str | Unset):
         buyer_login (None | str | Unset):
+        buyer_id (None | str | Unset):
         last_message (Message | None | Unset):
         last_message_at (datetime.datetime | None | Unset):
     """
@@ -39,6 +40,7 @@ class Conversation:
     updated_at: datetime.datetime
     platform: None | str | Unset = UNSET
     buyer_login: None | str | Unset = UNSET
+    buyer_id: None | str | Unset = UNSET
     last_message: Message | None | Unset = UNSET
     last_message_at: datetime.datetime | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -67,6 +69,12 @@ class Conversation:
             buyer_login = UNSET
         else:
             buyer_login = self.buyer_login
+
+        buyer_id: None | str | Unset
+        if isinstance(self.buyer_id, Unset):
+            buyer_id = UNSET
+        else:
+            buyer_id = self.buyer_id
 
         last_message: dict[str, Any] | None | Unset
         if isinstance(self.last_message, Unset):
@@ -99,6 +107,8 @@ class Conversation:
             field_dict["platform"] = platform
         if buyer_login is not UNSET:
             field_dict["buyerLogin"] = buyer_login
+        if buyer_id is not UNSET:
+            field_dict["buyerId"] = buyer_id
         if last_message is not UNSET:
             field_dict["lastMessage"] = last_message
         if last_message_at is not UNSET:
@@ -138,6 +148,15 @@ class Conversation:
             return cast(None | str | Unset, data)
 
         buyer_login = _parse_buyer_login(d.pop("buyerLogin", UNSET))
+
+        def _parse_buyer_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        buyer_id = _parse_buyer_id(d.pop("buyerId", UNSET))
 
         def _parse_last_message(data: object) -> Message | None | Unset:
             if data is None:
@@ -181,6 +200,7 @@ class Conversation:
             updated_at=updated_at,
             platform=platform,
             buyer_login=buyer_login,
+            buyer_id=buyer_id,
             last_message=last_message,
             last_message_at=last_message_at,
         )

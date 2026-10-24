@@ -368,6 +368,52 @@ def test_customers_get_reads_one_customer():
     assert requests[0].url.path == f"/api/public/v1/customers/{ACCOUNT}"
 
 
+FAVORITE = {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "accountId": "11111111-1111-1111-1111-111111111111",
+    "platform": "VINTED",
+    "buyerId": "b1",
+    "createdAt": "2026-10-24T00:00:00Z",
+    "messageSentAt": None,
+    "listingId": "L1",
+    "item": {"id": 42, "name": "Jacket", "price": {"amount": "12.50", "currency": "EUR"}, "sold": False},
+}
+
+
+def test_favorites_iter_follows_the_cursor_with_the_same_filters():
+    import datetime
+
+    seen = []
+
+    def handler(request):
+        seen.append(request.url)
+        if request.url.params.get("cursor"):
+            return reply({"data": [{**FAVORITE, "buyerId": "b2", "item": None}], "nextCursor": None})
+        return reply({"data": [FAVORITE], "nextCursor": "c2"})
+
+    _, sdk = client(handler)
+    start = datetime.datetime(2026, 10, 1, tzinfo=datetime.timezone.utc)
+    favorites = list(sdk.favorites.iter(account_id=ACCOUNT, item_id=42, from_=start, limit=1))
+    assert [f.buyer_id for f in favorites] == ["b1", "b2"]
+    assert favorites[0].item.name == "Jacket" and favorites[1].item is None
+    assert [u.path for u in seen] == ["/api/public/v1/favorites"] * 2
+    assert [u.params["itemId"] for u in seen] == ["42", "42"] and [u.params["accountId"] for u in seen] == [ACCOUNT] * 2
+    assert seen[0].params["from"] == start.isoformat() and seen[1].params["cursor"] == "c2"
+
+
+def test_favorites_iter_item_reads_the_favorites_of_one_item():
+    requests, sdk = client(lambda r: reply({"data": [FAVORITE], "nextCursor": None}))
+    assert [f.buyer_id for f in sdk.favorites.iter_item(42)] == ["b1"]
+    assert requests[0].url.path == "/api/public/v1/items/42/favorites"
+
+
+def test_conversations_list_sends_the_buyer_item_and_offer_status_filters():
+    requests, sdk = client(lambda r: reply({"data": [], "nextCursor": None}))
+    sdk.conversations.list(buyer_id="b-1", item_id=42, offer_status="PENDING")
+    params = requests[0].url.params
+    assert params["buyerId"] == "b-1" and params["itemId"] == "42" and params["offerStatus"] == "PENDING"
+
+
 def test_catalogs_iter_brands_follows_the_cursor_with_the_same_query():
     seen = []
 

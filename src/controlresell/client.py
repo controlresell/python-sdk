@@ -45,6 +45,7 @@ from .generated.api.catalogs import (
     list_catalog_sizes,
 )
 from .generated.api.customers import get_customer, list_customers
+from .generated.api.favorites import list_favorites, list_item_favorites
 from .generated.api.webhooks import (
     create_webhook_endpoint,
     delete_webhook_endpoint,
@@ -80,6 +81,8 @@ from .generated.models import (
     CreatedWebhookEndpoint,
     Customer,
     CustomerPage,
+    Favorite,
+    FavoritePage,
     Item,
     ItemCreateRequest,
     ItemPage,
@@ -163,6 +166,7 @@ class ControlResell:
         self.conversations = _Conversations(self)
         self.orders = _Orders(self)
         self.customers = _Customers(self)
+        self.favorites = _Favorites(self)
         self.catalogs = _Catalogs(self)
         self.webhooks = _Webhooks(self)
 
@@ -309,15 +313,30 @@ class _Conversations:
         account_id: UUID | str | None = None,
         from_: datetime.datetime | None = None,
         to: datetime.datetime | None = None,
+        buyer_id: str | None = None,
+        item_id: int | None = None,
+        offer_status: str | None = None,
     ) -> ConversationPage:
         """One page of the conversations with buyers.
 
         ``from_`` (inclusive) and ``to`` (exclusive) bound the last message (a naive datetime is read as UTC).
+        ``buyer_id`` keeps the conversations with one buyer, ``item_id`` those about one item, ``offer_status``
+        those with an offer at this status (``PENDING``, ``ACCEPTED``, ``REJECTED`` or ``CANCELED``).
         """
         account = UUID(str(account_id)) if account_id is not None else None
         return self._sdk._call(  # noqa: SLF001
             list_conversations,
-            **_query(limit=limit, cursor=cursor, unread=unread, account_id=account, from_=_utc(from_), to=_utc(to)),
+            **_query(
+                limit=limit,
+                cursor=cursor,
+                unread=unread,
+                account_id=account,
+                from_=_utc(from_),
+                to=_utc(to),
+                buyer_id=buyer_id,
+                item_id=item_id,
+                offer_status=offer_status,
+            ),
         )
 
     def get(self, id: UUID | str) -> Conversation:
@@ -482,6 +501,74 @@ class _Customers:
     ) -> Iterator[Customer]:
         """Every customer, page after page, with the same filters."""
         return paginate(lambda cursor: self.list(limit=limit, cursor=cursor, account_id=account_id, from_=from_, to=to))
+
+
+class _Favorites:
+    """The buyers who put the seller's listings in their favorites (needs the ``items:read`` scope)."""
+
+    def __init__(self, sdk: ControlResell) -> None:
+        self._sdk = sdk
+
+    def list(
+        self,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        account_id: UUID | str | None = None,
+        item_id: int | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> FavoritePage:
+        """One page of favorites, the most recent first.
+
+        ``from_`` is inclusive and ``to`` exclusive, on the date of the favorite (a naive datetime is read as UTC).
+        """
+        account = UUID(str(account_id)) if account_id is not None else None
+        return self._sdk._call(  # noqa: SLF001
+            list_favorites,
+            **_query(limit=limit, cursor=cursor, account_id=account, item_id=item_id, from_=_utc(from_), to=_utc(to)),
+        )
+
+    def iter(
+        self,
+        *,
+        limit: int | None = None,
+        account_id: UUID | str | None = None,
+        item_id: int | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> Iterator[Favorite]:
+        """Every favorite, page after page, with the same filters."""
+        return paginate(
+            lambda cursor: self.list(
+                limit=limit, cursor=cursor, account_id=account_id, item_id=item_id, from_=from_, to=to
+            )
+        )
+
+    def list_item(
+        self,
+        id: int,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> FavoritePage:
+        """One page of the favorites of an item, on every account it is listed on, the most recent first."""
+        return self._sdk._call(  # noqa: SLF001
+            list_item_favorites, id=id, **_query(limit=limit, cursor=cursor, from_=_utc(from_), to=_utc(to))
+        )
+
+    def iter_item(
+        self,
+        id: int,
+        *,
+        limit: int | None = None,
+        from_: datetime.datetime | None = None,
+        to: datetime.datetime | None = None,
+    ) -> Iterator[Favorite]:
+        """Every favorite of an item, page after page, with the same period."""
+        return paginate(lambda cursor: self.list_item(id, limit=limit, cursor=cursor, from_=from_, to=to))
 
 
 class _Catalogs:
