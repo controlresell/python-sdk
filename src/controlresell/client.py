@@ -487,7 +487,7 @@ class _Customers:
 class _Catalogs:
     """The catalog an item is written with: categories, brands, sizes, colors... (needs the ``items:read`` scope).
 
-    Every ``category_id`` keeps what applies to one category.
+    The ``category_id`` filter of a list keeps only the values that apply to that category.
     """
 
     def __init__(self, sdk: ControlResell) -> None:
