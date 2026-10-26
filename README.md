@@ -2,6 +2,15 @@
 
 Python client for the [ControlResell](https://controlresell.com) public API (Python 3.11+).
 
+## Install
+
+From the 0.1.0 release, on [PyPI](https://pypi.org/project/controlresell/):
+
+```sh
+pip install controlresell
+```
+
+
 ```python
 from controlresell import ControlResell
 
@@ -43,4 +52,4 @@ pip install -e ".[test]"
 pytest
 ```
 
-Not published yet. Licensed under the Apache License 2.0.
+Licensed under the Apache License 2.0.
