@@ -1,6 +1,6 @@
 """Python client for the ControlResell public API."""
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 from .client import API_KEY_VARIABLE, DEFAULT_BASE_URL, ControlResell
 from .errors import (
