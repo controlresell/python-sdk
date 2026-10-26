@@ -4,7 +4,7 @@ Python client for the [ControlResell](https://controlresell.com) public API (Pyt
 
 ## Install
 
-From the 0.1.0 release, on [PyPI](https://pypi.org/project/controlresell/):
+From the 1.0.0 release, on [PyPI](https://pypi.org/project/controlresell/):
 
 ```sh
 pip install controlresell
