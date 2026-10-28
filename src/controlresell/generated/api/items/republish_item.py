@@ -119,12 +119,12 @@ def sync_detailed(
 ) -> Response[ErrorResponse | ScheduledAction]:
     """Republish an item on the seller's accounts
 
-     Schedules the republication of one item of the seller's stock, now, exactly as the app and the MCP
-    tool `republish_items` do: ControlResell deletes the listing and publishes it again from the item it
-    holds, with the same safeguards (republication pace, publication guards). eBay, Shopify and Etsy do
-    not republish: their accounts are refused (`republish_not_supported`). Without `accountIds`, every
-    account the item is listed on. The republication runs on the account's browser: read its result on
-    `GET /items/{id}/listings`.
+     Schedules the republication of one item of the seller's stock, now or at `scheduledAt` (at most 30
+    days ahead), exactly as the app and the MCP tool `republish_items` do: ControlResell deletes the
+    listing and publishes it again from the item it holds, with the same safeguards (republication pace,
+    publication guards). eBay, Shopify and Etsy do not republish: their accounts are refused
+    (`republish_not_supported`). Without `accountIds`, every account the item is listed on. The
+    republication runs on the account's browser: read its result on `GET /items/{id}/listings`.
 
     This API never relays a marketplace's own API (Vinted, eBay…): every write runs a ControlResell use
     case on an item of the seller's stock. To cross-list an item on another account or marketplace
@@ -166,12 +166,12 @@ def sync(
 ) -> ErrorResponse | ScheduledAction | None:
     """Republish an item on the seller's accounts
 
-     Schedules the republication of one item of the seller's stock, now, exactly as the app and the MCP
-    tool `republish_items` do: ControlResell deletes the listing and publishes it again from the item it
-    holds, with the same safeguards (republication pace, publication guards). eBay, Shopify and Etsy do
-    not republish: their accounts are refused (`republish_not_supported`). Without `accountIds`, every
-    account the item is listed on. The republication runs on the account's browser: read its result on
-    `GET /items/{id}/listings`.
+     Schedules the republication of one item of the seller's stock, now or at `scheduledAt` (at most 30
+    days ahead), exactly as the app and the MCP tool `republish_items` do: ControlResell deletes the
+    listing and publishes it again from the item it holds, with the same safeguards (republication pace,
+    publication guards). eBay, Shopify and Etsy do not republish: their accounts are refused
+    (`republish_not_supported`). Without `accountIds`, every account the item is listed on. The
+    republication runs on the account's browser: read its result on `GET /items/{id}/listings`.
 
     This API never relays a marketplace's own API (Vinted, eBay…): every write runs a ControlResell use
     case on an item of the seller's stock. To cross-list an item on another account or marketplace
@@ -208,12 +208,12 @@ async def asyncio_detailed(
 ) -> Response[ErrorResponse | ScheduledAction]:
     """Republish an item on the seller's accounts
 
-     Schedules the republication of one item of the seller's stock, now, exactly as the app and the MCP
-    tool `republish_items` do: ControlResell deletes the listing and publishes it again from the item it
-    holds, with the same safeguards (republication pace, publication guards). eBay, Shopify and Etsy do
-    not republish: their accounts are refused (`republish_not_supported`). Without `accountIds`, every
-    account the item is listed on. The republication runs on the account's browser: read its result on
-    `GET /items/{id}/listings`.
+     Schedules the republication of one item of the seller's stock, now or at `scheduledAt` (at most 30
+    days ahead), exactly as the app and the MCP tool `republish_items` do: ControlResell deletes the
+    listing and publishes it again from the item it holds, with the same safeguards (republication pace,
+    publication guards). eBay, Shopify and Etsy do not republish: their accounts are refused
+    (`republish_not_supported`). Without `accountIds`, every account the item is listed on. The
+    republication runs on the account's browser: read its result on `GET /items/{id}/listings`.
 
     This API never relays a marketplace's own API (Vinted, eBay…): every write runs a ControlResell use
     case on an item of the seller's stock. To cross-list an item on another account or marketplace
@@ -253,12 +253,12 @@ async def asyncio(
 ) -> ErrorResponse | ScheduledAction | None:
     """Republish an item on the seller's accounts
 
-     Schedules the republication of one item of the seller's stock, now, exactly as the app and the MCP
-    tool `republish_items` do: ControlResell deletes the listing and publishes it again from the item it
-    holds, with the same safeguards (republication pace, publication guards). eBay, Shopify and Etsy do
-    not republish: their accounts are refused (`republish_not_supported`). Without `accountIds`, every
-    account the item is listed on. The republication runs on the account's browser: read its result on
-    `GET /items/{id}/listings`.
+     Schedules the republication of one item of the seller's stock, now or at `scheduledAt` (at most 30
+    days ahead), exactly as the app and the MCP tool `republish_items` do: ControlResell deletes the
+    listing and publishes it again from the item it holds, with the same safeguards (republication pace,
+    publication guards). eBay, Shopify and Etsy do not republish: their accounts are refused
+    (`republish_not_supported`). Without `accountIds`, every account the item is listed on. The
+    republication runs on the account's browser: read its result on `GET /items/{id}/listings`.
 
     This API never relays a marketplace's own API (Vinted, eBay…): every write runs a ControlResell use
     case on an item of the seller's stock. To cross-list an item on another account or marketplace

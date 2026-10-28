@@ -222,6 +222,21 @@ def test_price_drop_posts_to_the_price_drop_route():
     assert json.loads(requests[0].content) == {"type": "PERCENT", "value": "10"}
 
 
+def test_publish_price_drop_and_republish_send_scheduled_at():
+    import datetime
+
+    from controlresell.generated.models import PriceDropRequest, PublishRequest, RepublishRequest
+
+    at = datetime.datetime(2026, 11, 2, 10, 0, tzinfo=datetime.timezone.utc)
+    requests, sdk = client(lambda r: reply(ACTION, 202))
+    sdk.items.publish(7, PublishRequest(account_ids=[ACCOUNT], scheduled_at=at))
+    sdk.items.price_drop(7, PriceDropRequest(type_="PERCENT", value="10", scheduled_at=at))
+    sdk.items.republish(7, RepublishRequest(scheduled_at=at))
+    assert len(requests) == 3
+    for request in requests:
+        assert json.loads(request.content)["scheduledAt"] == "2026-11-02T10:00:00+00:00"
+
+
 def test_delete_resolves_on_204_and_raises_a_typed_error_on_409():
     requests, sdk = client(lambda r: httpx.Response(204))
     assert sdk.items.delete(7) is None

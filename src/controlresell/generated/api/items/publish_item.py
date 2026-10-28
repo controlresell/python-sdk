@@ -118,11 +118,12 @@ def sync_detailed(
 ) -> Response[ErrorResponse | ScheduledAction]:
     """Publish an item on the seller's accounts
 
-     Schedules the publication of one item of the seller's stock on the given marketplace accounts, now.
-    The publication runs on the account's browser: read its result on `GET /items/{id}/listings`. To
-    cross-list an item ("list it on eBay"), call this route with that account: this API never relays a
-    marketplace's own API. Publishing one item on several accounts of the same marketplace risks a
-    strike from it: name only the accounts you mean. Requires `items:write` and an `Idempotency-Key`.
+     Schedules the publication of one item of the seller's stock on the given marketplace accounts, now
+    or at `scheduledAt` (at most 30 days ahead). The publication runs on the account's browser: read its
+    result on `GET /items/{id}/listings`. To cross-list an item ("list it on eBay"), call this route
+    with that account: this API never relays a marketplace's own API. Publishing one item on several
+    accounts of the same marketplace risks a strike from it: name only the accounts you mean. Requires
+    `items:write` and an `Idempotency-Key`.
 
     Args:
         id (int):
@@ -159,11 +160,12 @@ def sync(
 ) -> ErrorResponse | ScheduledAction | None:
     """Publish an item on the seller's accounts
 
-     Schedules the publication of one item of the seller's stock on the given marketplace accounts, now.
-    The publication runs on the account's browser: read its result on `GET /items/{id}/listings`. To
-    cross-list an item ("list it on eBay"), call this route with that account: this API never relays a
-    marketplace's own API. Publishing one item on several accounts of the same marketplace risks a
-    strike from it: name only the accounts you mean. Requires `items:write` and an `Idempotency-Key`.
+     Schedules the publication of one item of the seller's stock on the given marketplace accounts, now
+    or at `scheduledAt` (at most 30 days ahead). The publication runs on the account's browser: read its
+    result on `GET /items/{id}/listings`. To cross-list an item ("list it on eBay"), call this route
+    with that account: this API never relays a marketplace's own API. Publishing one item on several
+    accounts of the same marketplace risks a strike from it: name only the accounts you mean. Requires
+    `items:write` and an `Idempotency-Key`.
 
     Args:
         id (int):
@@ -195,11 +197,12 @@ async def asyncio_detailed(
 ) -> Response[ErrorResponse | ScheduledAction]:
     """Publish an item on the seller's accounts
 
-     Schedules the publication of one item of the seller's stock on the given marketplace accounts, now.
-    The publication runs on the account's browser: read its result on `GET /items/{id}/listings`. To
-    cross-list an item ("list it on eBay"), call this route with that account: this API never relays a
-    marketplace's own API. Publishing one item on several accounts of the same marketplace risks a
-    strike from it: name only the accounts you mean. Requires `items:write` and an `Idempotency-Key`.
+     Schedules the publication of one item of the seller's stock on the given marketplace accounts, now
+    or at `scheduledAt` (at most 30 days ahead). The publication runs on the account's browser: read its
+    result on `GET /items/{id}/listings`. To cross-list an item ("list it on eBay"), call this route
+    with that account: this API never relays a marketplace's own API. Publishing one item on several
+    accounts of the same marketplace risks a strike from it: name only the accounts you mean. Requires
+    `items:write` and an `Idempotency-Key`.
 
     Args:
         id (int):
@@ -234,11 +237,12 @@ async def asyncio(
 ) -> ErrorResponse | ScheduledAction | None:
     """Publish an item on the seller's accounts
 
-     Schedules the publication of one item of the seller's stock on the given marketplace accounts, now.
-    The publication runs on the account's browser: read its result on `GET /items/{id}/listings`. To
-    cross-list an item ("list it on eBay"), call this route with that account: this API never relays a
-    marketplace's own API. Publishing one item on several accounts of the same marketplace risks a
-    strike from it: name only the accounts you mean. Requires `items:write` and an `Idempotency-Key`.
+     Schedules the publication of one item of the seller's stock on the given marketplace accounts, now
+    or at `scheduledAt` (at most 30 days ahead). The publication runs on the account's browser: read its
+    result on `GET /items/{id}/listings`. To cross-list an item ("list it on eBay"), call this route
+    with that account: this API never relays a marketplace's own API. Publishing one item on several
+    accounts of the same marketplace risks a strike from it: name only the accounts you mean. Requires
+    `items:write` and an `Idempotency-Key`.
 
     Args:
         id (int):

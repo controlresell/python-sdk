@@ -28,11 +28,14 @@ for favorite in client.favorites.iter(item_id=42):  # the buyers who favorited a
 client.conversations.list(buyer_id="<buyer id>", offer_status="PENDING")  # buyer_id, item_id and offer_status filter the conversations
 
 # Writes (API key with `items:write` / `conversations:write`); `idempotency_key=` chooses the key.
+from datetime import datetime, timezone
+
 from controlresell.generated.models import ItemCreateRequest, ItemUpdateRequest, PublishRequest, SendMessageRequest
 
 client.items.create(ItemCreateRequest(name="Jacket"))  # client.items.update(42, ItemUpdateRequest(...)) patches
 
 client.items.publish(42, PublishRequest(account_ids=["<account id>"]))
+client.items.publish(42, PublishRequest(account_ids=["<account id>"], scheduled_at=datetime(2026, 11, 2, 10, 0, tzinfo=timezone.utc)))  # publish, price_drop and republish take an optional scheduled_at, at most 30 days ahead; without it they run now
 client.conversations.send_message("<conversation id>", SendMessageRequest(text="Hello!"))
 
 # Webhooks (`webhooks:read` / `webhooks:write`): endpoints, endpoint, create_endpoint, update_endpoint, delete_endpoint,
