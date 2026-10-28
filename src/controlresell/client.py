@@ -502,12 +502,10 @@ class _Files:
         upload = self.register(filename, content_type, len(data), idempotency_key=idempotency_key)
         if not upload.upload_url:
             raise ValueError(f"The API returned no upload address for file {upload.id}.")
-        try:
-            response = self._sdk._storage.put(  # noqa: SLF001
-                upload.upload_url, content=data, headers={"Content-Type": content_type}
-            )
-        except httpx.TransportError as cause:
-            raise ControlResellConnectionError(cause) from cause
+        # A network failure comes out of RetryTransport as a ControlResellConnectionError.
+        response = self._sdk._storage.put(  # noqa: SLF001
+            upload.upload_url, content=data, headers={"Content-Type": content_type}
+        )
         if not response.is_success:
             raise error_of(response.status_code, None, response.headers)
         return upload
