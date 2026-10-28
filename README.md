@@ -35,6 +35,8 @@ from controlresell.generated.models import ItemCreateRequest, ItemUpdateRequest,
 client.items.create(ItemCreateRequest(name="Jacket"))  # client.items.update(42, ItemUpdateRequest(...)) patches
 
 client.items.publish(42, PublishRequest(account_ids=["<account id>"]))
+photo = client.files.upload(open("jacket.jpg", "rb").read(), "jacket.jpg", "image/jpeg")  # registers the photo and PUTs its bytes; files.register only registers it, files.get reads it (status is PENDING until its bytes are stored)
+client.items.create(ItemCreateRequest(name="Jacket", photo_ids=[photo.id]))
 client.items.publish(42, PublishRequest(account_ids=["<account id>"], scheduled_at=datetime(2026, 11, 2, 10, 0, tzinfo=timezone.utc)))  # publish, price_drop and republish take an optional scheduled_at, at most 30 days ahead; without it they run now
 client.conversations.send_message("<conversation id>", SendMessageRequest(text="Hello!"))
 

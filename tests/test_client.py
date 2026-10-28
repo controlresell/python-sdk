@@ -9,6 +9,7 @@ from controlresell import (
     ControlResellConnectionError,
     ControlResell,
     NotFoundError,
+    PermissionDeniedError,
     RateLimitError,
     RetryPolicy,
     ServerError,
@@ -590,3 +591,39 @@ def test_webhooks_test_is_replayed_after_a_failed_connect_or_a_429_but_other_cal
     requests, sdk = client(unavailable_once)
     sdk.me.get()
     assert len(requests) == 2
+
+
+def test_files_register_get_and_upload():
+    puts = []
+
+    def handler(request):
+        if request.method == "PUT":
+            puts.append(request)
+            return httpx.Response(503) if len(puts) == 1 else httpx.Response(200)
+        if request.method == "POST":
+            return reply({"id": "11111111-1111-1111-1111-111111111111", "uploadUrl": "https://s3.test/put", "unknownField": 1}, 201)
+        return reply({"id": "11111111-1111-1111-1111-111111111111", "status": "CONFIRMED", "url": "https://s3.test/get",
+                      "createdAt": "2026-10-28T10:00:00Z"})
+
+    requests, sdk = client(handler)
+    upload = sdk.files.upload(b"abc", "a.jpg", "image/jpeg")
+    assert str(upload.id) == "11111111-1111-1111-1111-111111111111"
+    assert json.loads(requests[0].content) == {"filename": "a.jpg", "contentType": "image/jpeg", "size": 3}
+    assert requests[0].headers[IDEMPOTENCY_KEY_HEADER]
+    assert len(puts) == 2
+    assert puts[1].content == b"abc" and puts[1].headers["Content-Type"] == "image/jpeg"
+    assert "Authorization" not in puts[1].headers
+    assert str(puts[1].url) == "https://s3.test/put"
+    assert sdk.files.get(upload.id).status == "CONFIRMED"
+    assert requests[-1].url.path == f"/api/public/v1/files/{upload.id}"
+
+
+def test_files_upload_raises_a_typed_error_when_the_put_is_refused():
+    def handler(request):
+        if request.method == "PUT":
+            return httpx.Response(403)
+        return reply({"id": "11111111-1111-1111-1111-111111111111", "uploadUrl": "https://s3.test/put"}, 201)
+
+    _, sdk = client(handler)
+    with pytest.raises(PermissionDeniedError):
+        sdk.files.upload(b"abc", "a.jpg", "image/jpeg")

@@ -26,6 +26,9 @@ from .error_response import ErrorResponse
 from .favorite import Favorite
 from .favorite_item import FavoriteItem
 from .favorite_page import FavoritePage
+from .file import File
+from .file_upload import FileUpload
+from .file_upload_request import FileUploadRequest
 from .item import Item
 from .item_attribute import ItemAttribute
 from .item_create_request import ItemCreateRequest
@@ -96,6 +99,9 @@ __all__ = (
     "Favorite",
     "FavoriteItem",
     "FavoritePage",
+    "File",
+    "FileUpload",
+    "FileUploadRequest",
     "Item",
     "ItemAttribute",
     "ItemCreateRequest",
