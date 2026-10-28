@@ -45,6 +45,7 @@ from .generated.api.catalogs import (
     list_catalog_sizes,
 )
 from .generated.api.customers import get_customer, list_customers
+from .generated.api.files import get_file, upload_file
 from .generated.api.favorites import list_favorites, list_item_favorites
 from .generated.api.webhooks import (
     create_webhook_endpoint,
@@ -82,6 +83,9 @@ from .generated.models import (
     Customer,
     CustomerPage,
     Favorite,
+    File,
+    FileUpload,
+    FileUploadRequest,
     FavoritePage,
     Item,
     ItemCreateRequest,
@@ -153,6 +157,12 @@ class ControlResell:
         key = api_key or os.environ.get(API_KEY_VARIABLE)
         if not key:
             raise ValueError(f"No API key: pass api_key or set {API_KEY_VARIABLE}.")
+        # The bytes of a file go to the storage address, which is signed: no API key there.
+        self._storage = httpx.Client(
+            timeout=httpx.Timeout(timeout) if timeout is not None else None,
+            headers={"User-Agent": f"controlresell-python/{__version__}"},
+            transport=RetryTransport(transport or httpx.HTTPTransport(), retry),
+        )
         self._client = AuthenticatedClient(
             base_url=base_url,
             token=key,
@@ -166,6 +176,7 @@ class ControlResell:
         self.conversations = _Conversations(self)
         self.orders = _Orders(self)
         self.customers = _Customers(self)
+        self.files = _Files(self)
         self.favorites = _Favorites(self)
         self.catalogs = _Catalogs(self)
         self.webhooks = _Webhooks(self)
@@ -177,6 +188,7 @@ class ControlResell:
 
     def close(self) -> None:
         self._client.get_httpx_client().close()
+        self._storage.close()
 
     def __enter__(self) -> ControlResell:
         return self
@@ -461,6 +473,42 @@ class _Orders:
                 limit=limit, cursor=cursor, bucket=bucket, platform=platform, account_id=account_id, from_=from_, to=to
             )
         )
+
+
+class _Files:
+    """The photos of the seller's library: register one, send its bytes, read it."""
+
+    def __init__(self, sdk: ControlResell) -> None:
+        self._sdk = sdk
+
+    def register(
+        self, filename: str, content_type: str, size: int, *, idempotency_key: str | None = None
+    ) -> FileUpload:
+        """Registers a file (jpeg, png, webp, heic or heif, at most 20 MiB): its identifier and the address where to
+        ``PUT`` its bytes within 30 minutes (needs ``items:write``)."""
+        body = FileUploadRequest(filename=filename, content_type=content_type, size=size)
+        return self._sdk._call(upload_file, body=body, idempotency_key=_key(idempotency_key))  # noqa: SLF001
+
+    def get(self, id: UUID | str) -> File:
+        """One file of the library, with a signed link to read it; ``status`` is ``PENDING`` until its bytes are stored."""
+        return self._sdk._call(get_file, id=UUID(str(id)))  # noqa: SLF001
+
+    def upload(
+        self, data: bytes, filename: str, content_type: str, *, idempotency_key: str | None = None
+    ) -> FileUpload:
+        """Registers a file and sends its bytes (an HTTP ``PUT`` with the same ``Content-Type``, no API key), and returns
+        the registration: put its ``id`` in ``photo_ids``. The ``PUT`` is retried like any call; a refused one is raised
+        as a ``ControlResellError`` (the file stays ``PENDING``)."""
+        upload = self.register(filename, content_type, len(data), idempotency_key=idempotency_key)
+        if not upload.upload_url:
+            raise ValueError(f"The API returned no upload address for file {upload.id}.")
+        # A network failure comes out of RetryTransport as a ControlResellConnectionError.
+        response = self._sdk._storage.put(  # noqa: SLF001
+            upload.upload_url, content=data, headers={"Content-Type": content_type}
+        )
+        if not response.is_success:
+            raise error_of(response.status_code, None, response.headers)
+        return upload
 
 
 class _Customers:
