@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, Self, TypeVar, cast
 from uuid import UUID
@@ -18,10 +19,12 @@ class PublishRequest:
     Attributes:
         account_ids (list[UUID]):
         cancel_before_proceeding (bool | None | Unset):
+        scheduled_at (datetime.datetime | None | Unset):
     """
 
     account_ids: list[UUID]
     cancel_before_proceeding: bool | None | Unset = UNSET
+    scheduled_at: datetime.datetime | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -36,6 +39,14 @@ class PublishRequest:
         else:
             cancel_before_proceeding = self.cancel_before_proceeding
 
+        scheduled_at: None | str | Unset
+        if isinstance(self.scheduled_at, Unset):
+            scheduled_at = UNSET
+        elif isinstance(self.scheduled_at, datetime.datetime):
+            scheduled_at = self.scheduled_at.isoformat()
+        else:
+            scheduled_at = self.scheduled_at
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -45,6 +56,8 @@ class PublishRequest:
         )
         if cancel_before_proceeding is not UNSET:
             field_dict["cancelBeforeProceeding"] = cancel_before_proceeding
+        if scheduled_at is not UNSET:
+            field_dict["scheduledAt"] = scheduled_at
 
         return field_dict
 
@@ -69,9 +82,27 @@ class PublishRequest:
             d.pop("cancelBeforeProceeding", UNSET)
         )
 
+        def _parse_scheduled_at(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                scheduled_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return scheduled_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        scheduled_at = _parse_scheduled_at(d.pop("scheduledAt", UNSET))
+
         publish_request = cls(
             account_ids=account_ids,
             cancel_before_proceeding=cancel_before_proceeding,
+            scheduled_at=scheduled_at,
         )
 
         publish_request.additional_properties = d

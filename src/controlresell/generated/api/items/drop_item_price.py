@@ -118,10 +118,10 @@ def sync_detailed(
 ) -> Response[ErrorResponse | ScheduledAction]:
     """Lower the price of an item's listings
 
-     Schedules a price drop of the item's existing listings, now, like the price drop of the app: the
-    listings are updated, not republished. `value` is what is removed from each listing's current price,
-    never the new price. Without `accountIds`, every account the item is online on. Requires
-    `items:write` and an `Idempotency-Key`.
+     Schedules a price drop of the item's existing listings, now or at `scheduledAt` (at most 30 days
+    ahead), like the price drop of the app: the listings are updated, not republished. `value` is what
+    is removed from each listing's current price, never the new price. Without `accountIds`, every
+    account the item is online on. Requires `items:write` and an `Idempotency-Key`.
 
     Args:
         id (int):
@@ -158,10 +158,10 @@ def sync(
 ) -> ErrorResponse | ScheduledAction | None:
     """Lower the price of an item's listings
 
-     Schedules a price drop of the item's existing listings, now, like the price drop of the app: the
-    listings are updated, not republished. `value` is what is removed from each listing's current price,
-    never the new price. Without `accountIds`, every account the item is online on. Requires
-    `items:write` and an `Idempotency-Key`.
+     Schedules a price drop of the item's existing listings, now or at `scheduledAt` (at most 30 days
+    ahead), like the price drop of the app: the listings are updated, not republished. `value` is what
+    is removed from each listing's current price, never the new price. Without `accountIds`, every
+    account the item is online on. Requires `items:write` and an `Idempotency-Key`.
 
     Args:
         id (int):
@@ -193,10 +193,10 @@ async def asyncio_detailed(
 ) -> Response[ErrorResponse | ScheduledAction]:
     """Lower the price of an item's listings
 
-     Schedules a price drop of the item's existing listings, now, like the price drop of the app: the
-    listings are updated, not republished. `value` is what is removed from each listing's current price,
-    never the new price. Without `accountIds`, every account the item is online on. Requires
-    `items:write` and an `Idempotency-Key`.
+     Schedules a price drop of the item's existing listings, now or at `scheduledAt` (at most 30 days
+    ahead), like the price drop of the app: the listings are updated, not republished. `value` is what
+    is removed from each listing's current price, never the new price. Without `accountIds`, every
+    account the item is online on. Requires `items:write` and an `Idempotency-Key`.
 
     Args:
         id (int):
@@ -231,10 +231,10 @@ async def asyncio(
 ) -> ErrorResponse | ScheduledAction | None:
     """Lower the price of an item's listings
 
-     Schedules a price drop of the item's existing listings, now, like the price drop of the app: the
-    listings are updated, not republished. `value` is what is removed from each listing's current price,
-    never the new price. Without `accountIds`, every account the item is online on. Requires
-    `items:write` and an `Idempotency-Key`.
+     Schedules a price drop of the item's existing listings, now or at `scheduledAt` (at most 30 days
+    ahead), like the price drop of the app: the listings are updated, not republished. `value` is what
+    is removed from each listing's current price, never the new price. Without `accountIds`, every
+    account the item is online on. Requires `items:write` and an `Idempotency-Key`.
 
     Args:
         id (int):

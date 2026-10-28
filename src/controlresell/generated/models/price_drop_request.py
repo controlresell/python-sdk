@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Mapping
 from typing import Any, Self, TypeVar, cast
 from uuid import UUID
@@ -21,6 +22,7 @@ class PriceDropRequest:
         round_type (None | str | Unset):
         round_step (None | str | Unset):
         account_ids (list[UUID] | None | Unset):
+        scheduled_at (datetime.datetime | None | Unset):
     """
 
     type_: str
@@ -28,6 +30,7 @@ class PriceDropRequest:
     round_type: None | str | Unset = UNSET
     round_step: None | str | Unset = UNSET
     account_ids: list[UUID] | None | Unset = UNSET
+    scheduled_at: datetime.datetime | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -59,6 +62,14 @@ class PriceDropRequest:
         else:
             account_ids = self.account_ids
 
+        scheduled_at: None | str | Unset
+        if isinstance(self.scheduled_at, Unset):
+            scheduled_at = UNSET
+        elif isinstance(self.scheduled_at, datetime.datetime):
+            scheduled_at = self.scheduled_at.isoformat()
+        else:
+            scheduled_at = self.scheduled_at
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -73,6 +84,8 @@ class PriceDropRequest:
             field_dict["roundStep"] = round_step
         if account_ids is not UNSET:
             field_dict["accountIds"] = account_ids
+        if scheduled_at is not UNSET:
+            field_dict["scheduledAt"] = scheduled_at
 
         return field_dict
 
@@ -123,12 +136,30 @@ class PriceDropRequest:
 
         account_ids = _parse_account_ids(d.pop("accountIds", UNSET))
 
+        def _parse_scheduled_at(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                scheduled_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return scheduled_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        scheduled_at = _parse_scheduled_at(d.pop("scheduledAt", UNSET))
+
         price_drop_request = cls(
             type_=type_,
             value=value,
             round_type=round_type,
             round_step=round_step,
             account_ids=account_ids,
+            scheduled_at=scheduled_at,
         )
 
         price_drop_request.additional_properties = d

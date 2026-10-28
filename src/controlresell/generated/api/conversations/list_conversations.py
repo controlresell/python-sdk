@@ -142,8 +142,11 @@ def sync_detailed(
     the buyer's identifier on the marketplace (a conversation's `buyerId`); `itemId` keeps the
     conversations about the item, through their transactions on the marketplace (a conversation the
     marketplace ties to no listing of the item is not found); `offerStatus` keeps those with at least
-    one offer currently at that status, and with `itemId` that same offer is on the item. An `itemId`
-    that is not one of the seller's items answers an empty page. Requires `conversations:read`.
+    one offer currently at that status; with `itemId`, that offer is on the item through its own
+    transaction, and an offer with no transaction of its own counts when the conversation's transactions
+    carry the item (so the result is approximate for such an offer: it can be an offer about another
+    item of the same conversation). An `itemId` that is not one of the seller's items answers an empty
+    page. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
@@ -207,8 +210,11 @@ def sync(
     the buyer's identifier on the marketplace (a conversation's `buyerId`); `itemId` keeps the
     conversations about the item, through their transactions on the marketplace (a conversation the
     marketplace ties to no listing of the item is not found); `offerStatus` keeps those with at least
-    one offer currently at that status, and with `itemId` that same offer is on the item. An `itemId`
-    that is not one of the seller's items answers an empty page. Requires `conversations:read`.
+    one offer currently at that status; with `itemId`, that offer is on the item through its own
+    transaction, and an offer with no transaction of its own counts when the conversation's transactions
+    carry the item (so the result is approximate for such an offer: it can be an offer about another
+    item of the same conversation). An `itemId` that is not one of the seller's items answers an empty
+    page. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
@@ -267,8 +273,11 @@ async def asyncio_detailed(
     the buyer's identifier on the marketplace (a conversation's `buyerId`); `itemId` keeps the
     conversations about the item, through their transactions on the marketplace (a conversation the
     marketplace ties to no listing of the item is not found); `offerStatus` keeps those with at least
-    one offer currently at that status, and with `itemId` that same offer is on the item. An `itemId`
-    that is not one of the seller's items answers an empty page. Requires `conversations:read`.
+    one offer currently at that status; with `itemId`, that offer is on the item through its own
+    transaction, and an offer with no transaction of its own counts when the conversation's transactions
+    carry the item (so the result is approximate for such an offer: it can be an offer about another
+    item of the same conversation). An `itemId` that is not one of the seller's items answers an empty
+    page. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
@@ -330,8 +339,11 @@ async def asyncio(
     the buyer's identifier on the marketplace (a conversation's `buyerId`); `itemId` keeps the
     conversations about the item, through their transactions on the marketplace (a conversation the
     marketplace ties to no listing of the item is not found); `offerStatus` keeps those with at least
-    one offer currently at that status, and with `itemId` that same offer is on the item. An `itemId`
-    that is not one of the seller's items answers an empty page. Requires `conversations:read`.
+    one offer currently at that status; with `itemId`, that offer is on the item through its own
+    transaction, and an offer with no transaction of its own counts when the conversation's transactions
+    carry the item (so the result is approximate for such an offer: it can be an offer about another
+    item of the same conversation). An `itemId` that is not one of the seller's items answers an empty
+    page. Requires `conversations:read`.
 
     Args:
         limit (int | Unset):  Default: 50.
